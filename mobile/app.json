@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "POS Mobile",
+    "slug": "pos-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1324"
+      }
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
