@@ -26,7 +26,7 @@ async function request(path, { method = 'GET', token, body, headers = {} } = {})
     error.payload = data;
     throw error;
   }
-
+  
   return data;
 }
 

@@ -24,7 +24,7 @@ export default function Topbar({ auth, onLogout }) {
       <div className="topbar-right">
         {auth && auth.user ? (
           <div className="user-area">
-            <div className="muted user-name">{auth.user.name || auth.user.email}</div>
+            <div className="muted user-name">Welcome, {auth.user.name || auth.user.email}</div>
             <button className="nav-btn" onClick={() => { onLogout(); navigate('/login'); }}>Logout</button>
           </div>
         ) : (

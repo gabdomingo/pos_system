@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { API } from '../config';
 import { formatCurrency, formatNumber } from '../utils/format';
 
-export default function SalesPage() {
+export default function SalesPage({ auth, onLogout }) {
   const [sales, setSales] = useState([]);
   const [recentTx, setRecentTx] = useState([]);
   const [detail, setDetail] = useState(null);
@@ -155,7 +155,20 @@ export default function SalesPage() {
 
   return (
     <div className="page sales-page">
-      <h2>Sales History</h2>
+      <div className="pos-terminal-header admin-hero admin-hero-compact">
+        <div>
+          <div className="pos-kicker">Sales Monitoring</div>
+          <h2>Track Receipts and Order Activity</h2>
+          <p>Review completed sales, inspect customer order details, and void transactions with a complete audit trail.</p>
+        </div>
+        <div className="pos-header-actions">
+          <div className="pos-shift-chip admin-hero-chip">
+            <span>Signed in</span>
+            <strong>{auth?.user?.name || auth?.user?.email || 'Admin'}</strong>
+          </div>
+          {onLogout ? <button type="button" className="btn-ghost" onClick={onLogout}>Logout</button> : null}
+        </div>
+      </div>
 
       <div className="sales-controls">
         <div className="sales-controls-group">
@@ -230,13 +243,42 @@ export default function SalesPage() {
             <div>
               <h3>Sale #{detail.id}</h3>
               <div>
+                <div><strong>Receipt:</strong> {detail.receiptNumber || detail.receipt_number || '-'}</div>
+                <div><strong>Status:</strong> {detail.status || 'completed'}</div>
+                <div><strong>Payment:</strong> {detail.paymentMethod || '-'}</div>
+                {(detail.paymentReference || detail.payment_reference || detail.paymentLast4 || detail.payment_last4) && (
+                  <div><strong>Reference:</strong> {detail.paymentReference || detail.payment_reference || `Card ending in ${detail.paymentLast4 || detail.payment_last4}`}</div>
+                )}
+                <div><strong>Channel:</strong> {detail.saleChannel || detail.sale_channel || '-'}</div>
+                <div><strong>Fulfillment:</strong> {detail.fulfillmentType || detail.fulfillment_type || '-'}</div>
+                {(detail.customerName || detail.customer_name) && (
+                  <div><strong>Customer:</strong> {detail.customerName || detail.customer_name}</div>
+                )}
+                {(detail.customerPhone || detail.customer_phone) && (
+                  <div><strong>Phone:</strong> {detail.customerPhone || detail.customer_phone}</div>
+                )}
+                {(detail.customerEmail || detail.customer_email) && (
+                  <div><strong>Email:</strong> {detail.customerEmail || detail.customer_email}</div>
+                )}
+                {(detail.deliveryAddress || detail.delivery_address) && (
+                  <div><strong>Address:</strong> {detail.deliveryAddress || detail.delivery_address}</div>
+                )}
+                <div><strong>Subtotal:</strong> {formatCurrency(detail.subtotal || 0)}</div>
+                {Number(detail.discountAmount || detail.discount_amount || 0) > 0 && (
+                  <div><strong>Discount:</strong> {formatCurrency(detail.discountAmount || detail.discount_amount || 0)}</div>
+                )}
+                {Number(detail.taxAmount || detail.tax_amount || 0) > 0 && (
+                  <div><strong>Tax:</strong> {formatCurrency(detail.taxAmount || detail.tax_amount || 0)}</div>
+                )}
+                <div><strong>Tendered:</strong> {formatCurrency(detail.amountTendered || detail.amount_tendered || detail.total || 0)}</div>
+                <div><strong>Change:</strong> {formatCurrency(detail.changeAmount || detail.change_amount || 0)}</div>
                 <div><strong>Total:</strong> {formatCurrency(detail.total || detail.total_amount || 0)}</div>
                 <div>
                   <strong>Items:</strong>
                   <ul className="detail-items">
                     {detail.items?.map((it, idx) => (
                       <li key={idx}>
-                        {it.product_id && `Product #${it.product_id}`} x {formatNumber(it.quantity)} @ {formatCurrency(it.price)}
+                        {(it.productName || it.product_name || (it.product_id && `Product #${it.product_id}`) || 'Product')} x {formatNumber(it.quantity)} @ {formatCurrency(it.price)} = {formatCurrency(it.lineTotal || it.line_total || Number(it.quantity || 0) * Number(it.price || 0))}
                       </li>
                     ))}
                   </ul>

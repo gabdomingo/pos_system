@@ -3,11 +3,13 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Card, Chip, Text } from 'react-native-paper';
 import { getDashboard } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { screenShell } from '../styles/screenShell';
 import { formatCurrency, formatNumber } from '../utils/format';
+import { useResponsiveLayout } from '../utils/responsive';
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, style }) {
   return (
-    <Card style={styles.statCard}>
+    <Card style={[screenShell.sectionCard, styles.statCard, style]}>
       <Card.Content>
         <Text style={styles.statLabel}>{label}</Text>
         <Text variant="headlineSmall">{value}</Text>
@@ -18,6 +20,7 @@ function StatCard({ label, value }) {
 
 export default function AdminDashboardScreen() {
   const { token } = useAuth();
+  const layout = useResponsiveLayout();
   const [data, setData] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -41,97 +44,130 @@ export default function AdminDashboardScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      style={screenShell.container}
+      contentContainerStyle={[
+        screenShell.content,
+        { paddingHorizontal: layout.screenPadding, alignSelf: 'center', width: '100%', maxWidth: layout.maxContentWidth }
+      ]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadData} />}
     >
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Card style={screenShell.heroCard}>
+        <Card.Content>
+          <Text style={screenShell.heroEyebrow}>Admin Overview</Text>
+          <Text variant="headlineSmall" style={screenShell.heroTitle}>Track Charlie PC activity in one place</Text>
+          <Text style={screenShell.heroCopy}>Review product counts, low-stock alerts, recent receipts, and today&apos;s revenue using the same mobile shell as the rest of the app.</Text>
+        </Card.Content>
+      </Card>
+
+      {error ? <Text style={screenShell.errorText}>{error}</Text> : null}
 
       <View style={styles.grid}>
-        <StatCard label="Products" value={formatNumber(data?.totalProducts ?? 0)} />
-        <StatCard label="Low Stock" value={formatNumber(data?.lowStock ?? 0)} />
-        <StatCard label="Sales Today" value={formatNumber(data?.totalSalesToday ?? 0)} />
-        <StatCard label="Revenue Today" value={formatCurrency(data?.revenueToday || 0)} />
+        <StatCard label="Products" value={formatNumber(data?.totalProducts ?? 0)} style={getStatCardStyle(layout.statColumns)} />
+        <StatCard label="Low Stock" value={formatNumber(data?.lowStock ?? 0)} style={getStatCardStyle(layout.statColumns)} />
+        <StatCard label="Sales Today" value={formatNumber(data?.totalSalesToday ?? 0)} style={getStatCardStyle(layout.statColumns)} />
+        <StatCard label="Revenue Today" value={formatCurrency(data?.revenueToday || 0)} style={getStatCardStyle(layout.statColumns)} />
       </View>
 
-      <Card style={styles.panel}>
-        <Card.Title title="Top Products" />
-        <Card.Content>
-          {(data?.topProducts || []).map((product) => (
-            <View key={product.id} style={styles.row}>
-              <Text>{product.name}</Text>
-              <Chip compact>{formatNumber(product.qty_sold || 0)} sold</Chip>
-            </View>
-          ))}
-          {(!data?.topProducts || data.topProducts.length === 0) ? <Text style={styles.empty}>No sales yet</Text> : null}
-        </Card.Content>
-      </Card>
-
-      <Card style={styles.panel}>
-        <Card.Title title="Recent Transactions" />
-        <Card.Content>
-          {(data?.recentTransactions || []).map((sale) => (
-            <View key={sale.id} style={styles.saleRow}>
-              <View>
-                <Text variant="labelLarge">Sale #{formatNumber(sale.id, { maximumFractionDigits: 0 })}</Text>
-                <Text style={styles.meta}>{new Date(sale.createdAt).toLocaleString()}</Text>
+      <View style={[styles.panelsGrid, layout.isExpanded && styles.panelsGridWide]}>
+        <Card style={[screenShell.sectionCard, styles.panel, layout.isExpanded && styles.panelWide]}>
+          <Card.Title title="Top Products" />
+          <Card.Content>
+            {(data?.topProducts || []).map((product) => (
+              <View key={product.id} style={styles.row}>
+                <Text style={styles.rowCopy}>{product.name}</Text>
+                <Chip compact>{formatNumber(product.qty_sold || 0)} sold</Chip>
               </View>
-              <Text variant="titleMedium">{formatCurrency(sale.total || 0)}</Text>
-            </View>
-          ))}
-          {(!data?.recentTransactions || data.recentTransactions.length === 0) ? <Text style={styles.empty}>No transactions yet</Text> : null}
-        </Card.Content>
-      </Card>
+            ))}
+            {(!data?.topProducts || data.topProducts.length === 0) ? <Text style={styles.empty}>No sales yet</Text> : null}
+          </Card.Content>
+        </Card>
+
+        <Card style={[screenShell.sectionCard, styles.panel, layout.isExpanded && styles.panelWide]}>
+          <Card.Title title="Recent Transactions" />
+          <Card.Content>
+            {(data?.recentTransactions || []).map((sale) => (
+              <View key={sale.id} style={styles.saleRow}>
+                <View style={styles.saleCopy}>
+                  <Text variant="labelLarge">Sale #{formatNumber(sale.id, { maximumFractionDigits: 0 })}</Text>
+                  <Text style={styles.meta}>{new Date(sale.createdAt).toLocaleString()}</Text>
+                </View>
+                <Text variant="titleMedium">{formatCurrency(sale.total || 0)}</Text>
+              </View>
+            ))}
+            {(!data?.recentTransactions || data.recentTransactions.length === 0) ? <Text style={styles.empty}>No transactions yet</Text> : null}
+          </Card.Content>
+        </Card>
+      </View>
     </ScrollView>
   );
 }
 
+function getStatCardStyle(columns) {
+  if (columns >= 4) return styles.statCardQuarter;
+  if (columns === 2) return styles.statCardHalf;
+  return styles.statCardFull;
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F4F6FA'
-  },
-  content: {
-    padding: 12,
-    gap: 10,
-    paddingBottom: 20
-  },
-  error: {
-    color: '#B42318'
-  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8
   },
   statCard: {
-    width: '48%',
-    borderRadius: 12
+    borderRadius: 18
+  },
+  statCardFull: {
+    width: '100%'
+  },
+  statCardHalf: {
+    width: '48.8%'
+  },
+  statCardQuarter: {
+    width: '24%'
   },
   statLabel: {
     color: '#667085',
     marginBottom: 6
   },
+  panelsGrid: {
+    gap: 10
+  },
+  panelsGridWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start'
+  },
   panel: {
-    borderRadius: 14
+    borderRadius: 22
+  },
+  panelWide: {
+    flex: 1
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8
+    marginBottom: 8,
+    gap: 12
+  },
+  rowCopy: {
+    flex: 1
   },
   saleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10
+    marginBottom: 10,
+    gap: 12
+  },
+  saleCopy: {
+    flex: 1
   },
   meta: {
-    color: '#667085'
+    ...screenShell.metaText
   },
   empty: {
-    color: '#667085',
+    ...screenShell.metaText,
     marginTop: 4
   }
 });

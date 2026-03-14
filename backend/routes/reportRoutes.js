@@ -13,13 +13,29 @@ router.get('/dashboard', async (req, res) => {
     const totalProducts = await db.get('SELECT COUNT(*) as count FROM products');
     const lowStock = await db.get('SELECT COUNT(*) as count FROM products WHERE stock <= 3');
     const today = new Date().toISOString().slice(0,10);
-    const totalSalesToday = await db.get("SELECT COUNT(*) as count, COALESCE(SUM(total),0) as revenue FROM sales WHERE DATE(createdAt) = ?", today);
+    const totalSalesToday = await db.get(
+      "SELECT COUNT(*) as count, COALESCE(SUM(total),0) as revenue FROM sales WHERE DATE(createdAt) = ? AND COALESCE(status, 'completed') = 'completed'",
+      today
+    );
 
     // recent transactions (last 5)
-    const recent = await db.all(`SELECT id, total, createdAt FROM sales ORDER BY id DESC LIMIT 5`);
+    const recent = await db.all(
+      `SELECT id, total, createdAt, receipt_number, paymentMethod
+       FROM sales
+       WHERE COALESCE(status, 'completed') = 'completed'
+       ORDER BY id DESC
+       LIMIT 5`
+    );
 
     // revenue for last 7 days
-    const revRows = await db.all(`SELECT DATE(createdAt) as day, COALESCE(SUM(total),0) as revenue FROM sales WHERE DATE(createdAt) >= DATE('now','-6 days') GROUP BY DATE(createdAt) ORDER BY DATE(createdAt) ASC`);
+    const revRows = await db.all(
+      `SELECT DATE(createdAt) as day, COALESCE(SUM(total),0) as revenue
+       FROM sales
+       WHERE DATE(createdAt) >= DATE('now','-6 days')
+         AND COALESCE(status, 'completed') = 'completed'
+       GROUP BY DATE(createdAt)
+       ORDER BY DATE(createdAt) ASC`
+    );
     // normalize into 7-day array
     const revenueLast7 = [];
     for (let i = 6; i >= 0; i--) {
@@ -31,7 +47,16 @@ router.get('/dashboard', async (req, res) => {
     }
 
     // top products (by quantity sold)
-    const topProducts = await db.all(`SELECT p.id, p.name, COALESCE(SUM(si.quantity),0) as qty_sold FROM products p LEFT JOIN sale_items si ON si.product_id = p.id GROUP BY p.id ORDER BY qty_sold DESC LIMIT 5`);
+    const topProducts = await db.all(
+      `SELECT p.id, p.name,
+              COALESCE(SUM(CASE WHEN COALESCE(s.status, 'completed') = 'completed' THEN si.quantity ELSE 0 END), 0) as qty_sold
+       FROM products p
+       LEFT JOIN sale_items si ON si.product_id = p.id
+       LEFT JOIN sales s ON s.id = si.sale_id
+       GROUP BY p.id
+       ORDER BY qty_sold DESC
+       LIMIT 5`
+    );
 
     res.json({
       totalProducts: totalProducts.count || 0,

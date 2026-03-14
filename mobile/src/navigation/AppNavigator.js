@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { formatNumber } from '../utils/format';
+import { useResponsiveLayout } from '../utils/responsive';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ProductsScreen from '../screens/ProductsScreen';
@@ -19,6 +20,48 @@ import AdminSalesScreen from '../screens/AdminSalesScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+function getTabScreenOptions(labelPosition) {
+  return ({ route }) => ({
+    headerTitleAlign: 'center',
+    tabBarActiveTintColor: '#0057D9',
+    tabBarLabelPosition: labelPosition,
+    tabBarStyle: {
+      height: labelPosition === 'beside-icon' ? 68 : 62,
+      paddingHorizontal: labelPosition === 'beside-icon' ? 12 : 0,
+      paddingBottom: 8,
+      paddingTop: 8
+    },
+    tabBarItemStyle: labelPosition === 'beside-icon'
+      ? {
+          borderRadius: 14,
+          marginHorizontal: 4
+        }
+      : undefined,
+    tabBarIcon: ({ color, size }) => {
+      const iconByRoute = route.name === 'Dashboard'
+        ? 'view-dashboard-outline'
+        : route.name === 'Products'
+          ? 'package-variant-closed'
+          : route.name === 'Sales'
+            ? 'chart-line'
+            : route.name === 'Shop'
+              ? 'shopping-outline'
+              : route.name === 'Cart'
+                ? 'cart-outline'
+                : route.name === 'Profile'
+                  ? 'account-circle-outline'
+                  : 'circle-outline';
+      return <MaterialCommunityIcons name={iconByRoute} color={color} size={size} />;
+    }
+  });
+}
+
+function buildTabScreenOptions(labelPosition) {
+  return ({ route }) => ({
+    ...getTabScreenOptions(labelPosition)({ route })
+  });
+}
+
 function AuthStack() {
   return (
     <Stack.Navigator>
@@ -30,20 +73,10 @@ function AuthStack() {
 
 function ShopTabs() {
   const { totalItems } = useCart();
+  const { tabLabelPosition } = useResponsiveLayout();
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerTitleAlign: 'center',
-        tabBarActiveTintColor: '#0057D9',
-        tabBarIcon: ({ color, size }) => {
-          const iconByRoute = {
-            Shop: 'shopping-outline',
-            Cart: 'cart-outline',
-            Profile: 'account-circle-outline'
-          };
-          return <MaterialCommunityIcons name={iconByRoute[route.name] || 'circle-outline'} color={color} size={size} />;
-        }
-      })}
+      screenOptions={buildTabScreenOptions(tabLabelPosition)}
     >
       <Tab.Screen name="Shop" component={ProductsScreen} />
       <Tab.Screen name="Cart" component={CartScreen} options={{ tabBarBadge: totalItems > 0 ? formatNumber(totalItems, { maximumFractionDigits: 0 }) : undefined }} />
@@ -53,21 +86,10 @@ function ShopTabs() {
 }
 
 function AdminTabs() {
+  const { tabLabelPosition } = useResponsiveLayout();
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerTitleAlign: 'center',
-        tabBarActiveTintColor: '#0057D9',
-        tabBarIcon: ({ color, size }) => {
-          const iconByRoute = {
-            Dashboard: 'view-dashboard-outline',
-            Products: 'package-variant-closed',
-            Sales: 'chart-line',
-            Profile: 'account-cog-outline'
-          };
-          return <MaterialCommunityIcons name={iconByRoute[route.name] || 'circle-outline'} color={color} size={size} />;
-        }
-      })}
+      screenOptions={buildTabScreenOptions(tabLabelPosition)}
     >
       <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
       <Tab.Screen name="Products" component={AdminProductsScreen} />
@@ -79,24 +101,21 @@ function AdminTabs() {
 
 function CashierTabs() {
   const { totalItems } = useCart();
+  const { tabLabelPosition } = useResponsiveLayout();
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerTitleAlign: 'center',
-        tabBarActiveTintColor: '#0057D9',
-        tabBarIcon: ({ color, size }) => {
-          const iconByRoute = {
-            Shop: 'shopping-outline',
-            Cart: 'cart-outline',
-            Products: 'package-variant-closed',
-            Profile: 'account-cog-outline'
-          };
-          return <MaterialCommunityIcons name={iconByRoute[route.name] || 'circle-outline'} color={color} size={size} />;
-        }
-      })}
+      screenOptions={buildTabScreenOptions(tabLabelPosition)}
     >
-      <Tab.Screen name="Shop" component={ProductsScreen} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ tabBarBadge: totalItems > 0 ? formatNumber(totalItems, { maximumFractionDigits: 0 }) : undefined }} />
+      <Tab.Screen name="Shop" component={ProductsScreen} options={{ title: 'Counter Products', tabBarLabel: 'Counter' }} />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          title: 'Process Payment',
+          tabBarLabel: 'Payment',
+          tabBarBadge: totalItems > 0 ? formatNumber(totalItems, { maximumFractionDigits: 0 }) : undefined
+        }}
+      />
       <Tab.Screen name="Products" component={AdminProductsScreen} options={{ title: 'Manage Products' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

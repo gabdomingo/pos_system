@@ -12,7 +12,7 @@ const PRODUCT_IMAGE_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIC
   </svg>`
 )}`;
 
-export default function ProductsPage({ auth }) {
+export default function ProductsPage({ auth, onLogout }) {
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({ name: '', category: '', price: '', stock: '', barcode: '', image: '' });
   const [editing, setEditing] = useState(null);
@@ -116,7 +116,20 @@ export default function ProductsPage({ auth }) {
 
   return (
     <div className="prod-container">
-      <h1 className="prod-heading">Add Products</h1>
+      <div className="pos-terminal-header admin-hero admin-hero-compact">
+        <div>
+          <div className="pos-kicker">Inventory Control</div>
+          <h2>Manage Charlie PC Products</h2>
+          <p>Keep catalog details clean, stock counts accurate, and product images ready for both cashier and customer views.</p>
+        </div>
+        <div className="pos-header-actions">
+          <div className="pos-shift-chip admin-hero-chip">
+            <span>Active products</span>
+            <strong>{formatNumber(products.length)}</strong>
+          </div>
+          {onLogout ? <button type="button" className="btn-ghost" onClick={onLogout}>Logout</button> : null}
+        </div>
+      </div>
 
       {message && (
         <div className={"message " + (message.toLowerCase().includes('success') ? 'success' : 'error')}>{message}</div>

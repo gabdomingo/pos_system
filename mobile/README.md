@@ -1,6 +1,6 @@
-# POS Mobile App (React Native + Material Design)
+# Charlie PC Mobile App (React Native + Material Design)
 
-This folder contains the mobile app version of the POS system using:
+This folder contains the mobile app version of Charlie PC using:
 
 - React Native (Expo)
 - React Navigation

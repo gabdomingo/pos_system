@@ -3,12 +3,15 @@ import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import { Button, Card, Dialog, FAB, Portal, Snackbar, Text, TextInput } from 'react-native-paper';
 import { addProduct, deleteProduct, getProducts, updateProduct } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { screenShell } from '../styles/screenShell';
 import { formatCurrency, formatNumber } from '../utils/format';
+import { useResponsiveLayout } from '../utils/responsive';
 
 const EMPTY_FORM = { name: '', category: '', price: '', stock: '', barcode: '', image: '' };
 
 export default function AdminProductsScreen() {
   const { token, user } = useAuth();
+  const layout = useResponsiveLayout();
   const canEditDelete = user?.role === 'admin';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -116,38 +119,53 @@ export default function AdminProductsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={screenShell.container}>
       <FlatList
+        key={layout.adminColumns}
         data={products}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
+        numColumns={layout.adminColumns}
+        columnWrapperStyle={layout.adminColumns > 1 ? styles.columnWrap : undefined}
+        contentContainerStyle={[
+          screenShell.listContent,
+          { paddingHorizontal: layout.screenPadding, alignSelf: 'center', width: '100%', maxWidth: layout.maxContentWidth }
+        ]}
         refreshing={loading}
         onRefresh={loadProducts}
-        renderItem={({ item }) => (
-          <Card style={styles.card}>
-            <Card.Title title={item.name} subtitle={item.category || 'Uncategorized'} />
+        ListHeaderComponent={(
+          <Card style={[screenShell.heroCard, styles.heroCard]}>
             <Card.Content>
-              <Text>{formatCurrency(item.price || 0)}</Text>
-              <Text style={styles.meta}>Stock: {formatNumber(item.stock || 0)}</Text>
+              <Text style={screenShell.heroEyebrow}>Catalog Control</Text>
+              <Text variant="headlineSmall" style={screenShell.heroTitle}>Manage products, pricing, and stock entries</Text>
+              <Text style={screenShell.heroCopy}>Use the same Charlie PC mobile shell to add products, review stock counts, and update catalog details from the cashier or admin side.</Text>
             </Card.Content>
-            <Card.Actions>
+          </Card>
+        )}
+        ListEmptyComponent={!loading ? <Text style={styles.empty}>No products found.</Text> : null}
+        renderItem={({ item }) => (
+          <View style={layout.adminColumns > 1 ? styles.cardSlotDouble : styles.cardSlotSingle}>
+            <Card style={[screenShell.sectionCard, styles.card]}>
+              <Card.Title title={item.name} subtitle={item.category || 'Uncategorized'} titleNumberOfLines={2} />
+              <Card.Content>
+                <Text>{formatCurrency(item.price || 0)}</Text>
+                <Text style={styles.meta}>Stock: {formatNumber(item.stock || 0)}</Text>
+                {!canEditDelete ? <Text style={styles.metaNote}>Cashier can add products only.</Text> : null}
+              </Card.Content>
               {canEditDelete ? (
-                <>
+                <Card.Actions>
                   <Button onPress={() => openEdit(item)}>Edit</Button>
                   <Button textColor="#B42318" onPress={() => askDelete(item)}>Delete</Button>
-                </>
-              ) : (
-                <Text style={styles.meta}>Cashier can add products only</Text>
-              )}
-            </Card.Actions>
-          </Card>
+                </Card.Actions>
+              ) : null}
+            </Card>
+          </View>
         )}
       />
 
-      <FAB icon="plus" style={styles.fab} onPress={openAdd} label="Add" />
+      <FAB icon="plus" style={styles.fab} onPress={openAdd} label="Add Product" />
 
       <Portal>
-        <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
+        <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)} style={layout.isExpanded ? styles.dialogWide : undefined}>
           <Dialog.Title>{editing ? 'Edit Product' : 'Add Product'}</Dialog.Title>
           <Dialog.Content>
             <TextInput label="Name" mode="outlined" value={form.name} onChangeText={(v) => setForm((p) => ({ ...p, name: v }))} style={styles.input} />
@@ -172,21 +190,31 @@ export default function AdminProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F4F6FA'
+  heroCard: {
+    marginBottom: 12
   },
-  listContent: {
-    padding: 12,
-    paddingBottom: 90,
-    gap: 10
+  columnWrap: {
+    justifyContent: 'space-between',
+    gap: 12
+  },
+  cardSlotSingle: {
+    width: '100%',
+    marginBottom: 12
+  },
+  cardSlotDouble: {
+    width: '48.8%',
+    marginBottom: 12
   },
   card: {
-    borderRadius: 14
+    borderRadius: 22
   },
   meta: {
-    color: '#667085',
+    ...screenShell.metaText,
     marginTop: 2
+  },
+  metaNote: {
+    ...screenShell.metaText,
+    marginTop: 8
   },
   fab: {
     position: 'absolute',
@@ -195,5 +223,13 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 8
+  },
+  dialogWide: {
+    alignSelf: 'center',
+    width: 680
+  },
+  empty: {
+    ...screenShell.emptyText,
+    marginTop: 24
   }
 });

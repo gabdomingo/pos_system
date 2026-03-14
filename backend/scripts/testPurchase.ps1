@@ -1,4 +1,4 @@
-$login = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/login -ContentType 'application/json' -Body (@{ email='customer@local'; password='cust123' } | ConvertTo-Json)
+$login = Invoke-RestMethod -Method Post -Uri http://localhost:5000/api/login -ContentType 'application/json' -Body (@{ email='customer@charliepc.ph'; password='cust123' } | ConvertTo-Json)
 Write-Output "LOGIN: $($login.user.email) role=$($login.user.role)"
 $token = $login.token
 $products = Invoke-RestMethod -Method Get -Uri http://localhost:5000/products

@@ -4,6 +4,7 @@
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
+    "check:paper-actions": "node scripts/check-paper-actions.js",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

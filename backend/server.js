@@ -6,6 +6,7 @@ import productRoutes from "./routes/productRoutes.js";
 import saleRoutes from "./routes/saleRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import referenceRoutes from "./routes/referenceRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -23,9 +24,10 @@ app.use("/sales", saleRoutes);
 app.use("/auth", authRoutes);
 app.use("/api", authRoutes);
 app.use("/reports", reportRoutes);
+app.use("/reference", referenceRoutes);
 
 app.get("/", (req, res) => {
-  res.send("POS Backend Running");
+  res.send("Charlie PC Backend Running");
 });
 
 const PORT = process.env.PORT || 5000;

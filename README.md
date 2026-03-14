@@ -1,4 +1,4 @@
-# POS System (React + Node + SQLite)
+# Charlie PC (React + Node + SQLite)
 
 This project has three active parts:
 
@@ -73,9 +73,9 @@ cd backend
 npm run seed
 ```
 
-This adds sample products and a cashier account.
+This adds sample products and the Charlie PC demo accounts.
 
-To seed or reset only login accounts (admin/cashier/customer):
+To seed or reset only login accounts:
 
 ```bash
 cd backend
@@ -84,9 +84,12 @@ npm run seed:accounts
 
 ## Default Accounts
 
-- Admin: `admin@local` / `admin123`
-- Customer: `customer@local` / `cust123`
-- Cashier (after seeding): `cashier@local` / `cashier123`
+- Admin: `admin@charliepc.ph` / `admin123`
+- Cashier: `cashier@charliepc.ph` / `cashier123`
+- Cashier 2: `claire@charliepc.ph` / `claire123`
+- Customer: `customer@charliepc.ph` / `cust123`
+- Demo Customer: `gabriel@charliepc.ph` / `gabriel123`
+- Demo Customer 2: `carl@charliepc.ph` / `carl12345`
 
 ## Custom Port Setup
 
@@ -148,4 +151,4 @@ curl http://localhost:5000/
 
 Expected response:
 
-`POS Backend Running`
+`Charlie PC Backend Running`

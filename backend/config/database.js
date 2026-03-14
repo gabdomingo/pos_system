@@ -3,6 +3,7 @@ import { open } from "sqlite";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';
+import { reconcileLegacyAccountEmails } from '../utils/accountSeeding.js';
 
 let db;
 
@@ -45,17 +46,38 @@ export async function initDB() {
     CREATE TABLE IF NOT EXISTS sales (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       total REAL,
+      subtotal REAL,
       paymentMethod TEXT,
+      receipt_number TEXT,
       createdAt TEXT,
-      user_id INTEGER
+      user_id INTEGER,
+      discount_type TEXT,
+      discount_value REAL,
+      discount_amount REAL,
+      tax_rate REAL,
+      tax_amount REAL,
+      amount_tendered REAL,
+      change_amount REAL,
+      status TEXT,
+      sale_channel TEXT,
+      voidedAt TEXT,
+      fulfillment_type TEXT,
+      customer_name TEXT,
+      customer_phone TEXT,
+      customer_email TEXT,
+      delivery_address TEXT,
+      payment_reference TEXT,
+      payment_last4 TEXT
     );
 
     CREATE TABLE IF NOT EXISTS sale_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sale_id INTEGER,
       product_id INTEGER,
+      product_name TEXT,
       quantity INTEGER,
-      price REAL
+      price REAL,
+      line_total REAL
     );
 
     CREATE TABLE IF NOT EXISTS users (
@@ -69,24 +91,71 @@ export async function initDB() {
 
   // ensure legacy databases get the `image` column
   try {
+    async function ensureColumn(tableName, columnName, definition) {
+      const columns = await db.all(`PRAGMA table_info(${tableName})`);
+      const hasColumn = columns.some((c) => c.name === columnName);
+      if (!hasColumn) {
+        await db.run(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+      }
+    }
+
     const info = await db.all("PRAGMA table_info(products)");
     const hasImage = info.some(c => c.name === 'image');
     if (!hasImage) {
       await db.run(`ALTER TABLE products ADD COLUMN image TEXT`);
     }
-    // ensure sales.user_id exists
-    const saleInfo = await db.all("PRAGMA table_info(sales)");
-    const hasUserId = saleInfo.some(c => c.name === 'user_id');
-    if (!hasUserId) {
-      await db.run(`ALTER TABLE sales ADD COLUMN user_id INTEGER`);
-    }
+    await ensureColumn('sales', 'user_id', 'INTEGER');
+    await ensureColumn('sales', 'subtotal', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'receipt_number', 'TEXT');
+    await ensureColumn('sales', 'discount_type', 'TEXT');
+    await ensureColumn('sales', 'discount_value', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'discount_amount', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'tax_rate', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'tax_amount', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'amount_tendered', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'change_amount', 'REAL DEFAULT 0');
+    await ensureColumn('sales', 'status', 'TEXT DEFAULT \'completed\'');
+    await ensureColumn('sales', 'sale_channel', 'TEXT DEFAULT \'pos\'');
+    await ensureColumn('sales', 'voidedAt', 'TEXT');
+    await ensureColumn('sales', 'fulfillment_type', 'TEXT DEFAULT \'in-store\'');
+    await ensureColumn('sales', 'customer_name', 'TEXT');
+    await ensureColumn('sales', 'customer_phone', 'TEXT');
+    await ensureColumn('sales', 'customer_email', 'TEXT');
+    await ensureColumn('sales', 'delivery_address', 'TEXT');
+    await ensureColumn('sales', 'payment_reference', 'TEXT');
+    await ensureColumn('sales', 'payment_last4', 'TEXT');
+
+    await ensureColumn('sale_items', 'product_name', 'TEXT');
+    await ensureColumn('sale_items', 'line_total', 'REAL DEFAULT 0');
+
+    await db.run(`UPDATE sales SET subtotal = COALESCE(subtotal, total, 0) WHERE subtotal IS NULL`);
+    await db.run(`UPDATE sales SET discount_value = COALESCE(discount_value, 0) WHERE discount_value IS NULL`);
+    await db.run(`UPDATE sales SET discount_amount = COALESCE(discount_amount, 0) WHERE discount_amount IS NULL`);
+    await db.run(`UPDATE sales SET tax_rate = COALESCE(tax_rate, 0) WHERE tax_rate IS NULL`);
+    await db.run(`UPDATE sales SET tax_amount = COALESCE(tax_amount, 0) WHERE tax_amount IS NULL`);
+    await db.run(`UPDATE sales SET amount_tendered = COALESCE(amount_tendered, total, 0) WHERE amount_tendered IS NULL`);
+    await db.run(`UPDATE sales SET change_amount = COALESCE(change_amount, 0) WHERE change_amount IS NULL`);
+    await db.run(`UPDATE sales SET status = 'completed' WHERE status IS NULL OR TRIM(status) = ''`);
+    await db.run(`UPDATE sales SET sale_channel = CASE WHEN sale_channel IS NULL OR TRIM(sale_channel) = '' THEN CASE WHEN LOWER(COALESCE(paymentMethod, '')) = 'online' THEN 'online' ELSE 'pos' END ELSE sale_channel END`);
+    await db.run(`UPDATE sales SET fulfillment_type = CASE WHEN fulfillment_type IS NULL OR TRIM(fulfillment_type) = '' THEN CASE WHEN COALESCE(sale_channel, 'pos') = 'online' THEN 'delivery' ELSE 'in-store' END ELSE fulfillment_type END`);
+    await db.run(`UPDATE sales SET customer_name = COALESCE(customer_name, '') WHERE customer_name IS NULL`);
+    await db.run(`UPDATE sales SET customer_phone = COALESCE(customer_phone, '') WHERE customer_phone IS NULL`);
+    await db.run(`UPDATE sales SET customer_email = COALESCE(customer_email, '') WHERE customer_email IS NULL`);
+    await db.run(`UPDATE sales SET delivery_address = COALESCE(delivery_address, '') WHERE delivery_address IS NULL`);
+    await db.run(`UPDATE sales SET payment_reference = COALESCE(payment_reference, '') WHERE payment_reference IS NULL`);
+    await db.run(`UPDATE sales SET payment_last4 = COALESCE(payment_last4, '') WHERE payment_last4 IS NULL`);
+    await db.run(`UPDATE sale_items SET product_name = COALESCE(product_name, '') WHERE product_name IS NULL`);
+    await db.run(`UPDATE sale_items SET line_total = ROUND(COALESCE(quantity, 0) * COALESCE(price, 0), 2) WHERE line_total IS NULL OR line_total = 0`);
+
+    await reconcileLegacyAccountEmails(db);
 
     // ensure users table exists (created above) and seed default users if empty
     const ucount = await db.get(`SELECT COUNT(*) as c FROM users`);
     if (!ucount || ucount.c === 0) {
-      // minimal default users; passwords should be hashed by userModel.registerUser during startup
-      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Admin', 'admin@local', 'admin123', 'admin');
-      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Customer', 'customer@local', 'cust123', 'customer');
+      // minimal default users; passwords are upgraded to bcrypt on first successful login
+      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Admin', 'admin@charliepc.ph', 'admin123', 'admin');
+      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Cashier', 'cashier@charliepc.ph', 'cashier123', 'cashier');
+      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Customer', 'customer@charliepc.ph', 'cust123', 'customer');
     }
   } catch (err) {
     console.error('Error ensuring image column:', err);

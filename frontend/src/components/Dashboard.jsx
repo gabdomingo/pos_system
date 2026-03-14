@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { API } from '../config';
 import { formatCurrency, formatNumber } from '../utils/format';
 
-export default function Dashboard({ auth }) {
+export default function Dashboard({ auth, onLogout }) {
   const [stats, setStats] = useState({ totalProducts: 0, lowStock: 0, totalSalesToday: 0, revenueToday: 0 });
   const [revenueLast7, setRevenueLast7] = useState([]);
   const [recentTx, setRecentTx] = useState([]);
@@ -71,19 +71,26 @@ export default function Dashboard({ auth }) {
   }
 
   return (
-    <div className="page">
-      <div className="dashboard-header">
-        <h2>Dashboard</h2>
-        {auth && auth.user && auth.user.role === 'admin' && (
-          <button type="button" className="secondary" onClick={() => setShowAdd(true)}>Add product</button>
-        )}
+    <div className="page admin-page">
+      <div className="pos-terminal-header admin-hero">
+        <div>
+          <div className="pos-kicker">Admin Workspace</div>
+          <h2>Charlie PC Operations Dashboard</h2>
+          <p>Welcome, {auth?.user?.name || auth?.user?.email || 'Admin'}. Monitor revenue, stock movement, and recent transactions from one control room.</p>
+        </div>
+        <div className="pos-header-actions">
+          {auth && auth.user && auth.user.role === 'admin' && (
+            <button type="button" className="secondary" onClick={() => setShowAdd(true)}>Add Product</button>
+          )}
+          {onLogout ? <button type="button" className="btn-ghost" onClick={onLogout}>Logout</button> : null}
+        </div>
       </div>
       {error && <div className="dashboard-error">{error}</div>}
-      <div className="cards">
-        <div className="card">Total Products<br /><strong>{formatNumber(stats.totalProducts)}</strong></div>
-        <div className="card">Low Stock Items<br /><strong>{formatNumber(stats.lowStock)}</strong></div>
-        <div className="card">Sales Today<br /><strong>{formatNumber(stats.totalSalesToday)}</strong></div>
-        <div className="card">Revenue Today<br /><strong>{formatCurrency(stats.revenueToday)}</strong></div>
+      <div className="cards admin-stat-grid">
+        <div className="card admin-stat-card">Total Products<br /><strong>{formatNumber(stats.totalProducts)}</strong></div>
+        <div className="card admin-stat-card">Low Stock Items<br /><strong>{formatNumber(stats.lowStock)}</strong></div>
+        <div className="card admin-stat-card">Sales Today<br /><strong>{formatNumber(stats.totalSalesToday)}</strong></div>
+        <div className="card admin-stat-card">Revenue Today<br /><strong>{formatCurrency(stats.revenueToday)}</strong></div>
       </div>
       <div className="dashboard-grid">
         <div className="dashboard-panel">
@@ -146,7 +153,7 @@ export default function Dashboard({ auth }) {
               <input type="number" placeholder="Stock" value={form.stock} onChange={e=>setForm({...form, stock: Number(e.target.value)})} />
               <input placeholder="Image URL" value={form.image} onChange={e=>setForm({...form, image: e.target.value})} />
               <div className="modal-actions">
-                <button type="submit" className="primary" disabled={adding}>{adding ? 'Adding...' : 'Add'}</button>
+                <button type="submit" className="primary" disabled={adding}>{adding ? 'Adding...' : 'Add Product'}</button>
                 <button type="button" className="btn-ghost" onClick={() => setShowAdd(false)}>Cancel</button>
               </div>
             </form>

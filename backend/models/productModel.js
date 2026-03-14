@@ -1,4 +1,5 @@
 import { getDB } from "../config/database.js";
+import { cleanupLegacyDemoProducts, seedDemoProducts } from "../data/demoProducts.js";
 
 export async function getAllProducts(req, res) {
   try {
@@ -14,29 +15,15 @@ export async function getAllProducts(req, res) {
 export async function seedProducts(req, res) {
   try {
     const database = getDB();
-
-    const sample = [
-      { name: "Apple", category: "Fruits", price: 0.5, stock: 100, barcode: "0001", image: "https://via.placeholder.com/200x120?text=Apple" },
-      { name: "Banana", category: "Fruits", price: 0.3, stock: 120, barcode: "0002", image: "https://via.placeholder.com/200x120?text=Banana" },
-      { name: "Milk", category: "Dairy", price: 15, stock: 50, barcode: "0003", image: "https://via.placeholder.com/200x120?text=Milk" },
-      { name: "Bread", category: "Bakery", price: 1.0, stock: 40, barcode: "0004", image: "https://via.placeholder.com/200x120?text=Bread" },
-      { name: "Eggs", category: "Dairy", price: 15, stock: 60, barcode: "0005", image: "https://image2url.com/r2/default/images/1771458494345-3d2b50af-aeba-4178-8c83-35bc68bdda30.png" }
-    ];
-
-    for (const p of sample) {
-      await database.run(
-        `INSERT INTO products (name, category, price, stock, barcode, image) VALUES (?, ?, ?, ?, ?, ?)`,
-        p.name,
-        p.category,
-        p.price,
-        p.stock,
-        p.barcode,
-        p.image || ''
-      );
-    }
+    const removedLegacy = await cleanupLegacyDemoProducts(database);
+    const result = await seedDemoProducts(database);
 
     const products = await database.all("SELECT * FROM products ORDER BY id DESC");
-    res.json({ seeded: sample.length, products });
+    res.json({
+      ...result,
+      removedLegacy,
+      products
+    });
   } catch (err) {
     console.error('seedProducts error:', err);
     res.status(500).json({ error: err.message });

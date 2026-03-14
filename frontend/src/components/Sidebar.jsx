@@ -15,7 +15,7 @@ export default function Sidebar({ page, setPage, mode, setMode, auth, onLogout, 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2 className="logo">POS</h2>
+        <h2 className="logo">Charlie PC</h2>
         <div className="time-display">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
       </div>
 
@@ -42,38 +42,12 @@ export default function Sidebar({ page, setPage, mode, setMode, auth, onLogout, 
         </button>
         {/* POS removed per request - keep admin-focused pages only */}
         <button type="button" className={page === "products" ? "nav-btn active" : "nav-btn"} onClick={() => { setPage('products'); try { window.dispatchEvent(new CustomEvent('products:openAdd')); } catch(e){} }}>
-          <span className="nav-icon">📦</span> ＋ Add product
+          <span className="nav-icon">📦</span> Add Product
         </button>
         <button type="button" className={page === "sales" ? "nav-btn active" : "nav-btn"} onClick={() => setPage('sales')}>
           <span className="nav-icon">📈</span> Sales History
         </button>
       </nav>
-
-      
-
-      <div className="sidebar-divider"></div>
-
-      <div className="sidebar-footer">
-        <div className="footer-item">
-          <div className="store-status-label">Store Status</div>
-          <div className="store-status-value">Open</div>
-        </div>
-        <div className="footer-item">
-          <div>Version 1.0</div>
-        </div>
-        {auth && auth.user ? (
-          <div>
-            <div className="sidebar-auth-name">{auth.user.name || auth.user.email}</div>
-            <div className="sidebar-auth-actions">
-              <button type="button" className="sidebar-auth-btn" onClick={onLogout}>Logout</button>
-            </div>
-          </div>
-        ) : (
-          <div className="sidebar-auth-actions">
-            <button type="button" className="sidebar-auth-btn" onClick={() => { if (onNavigate) onNavigate('/login'); else window.location.href = '/login'; }}>Login</button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
