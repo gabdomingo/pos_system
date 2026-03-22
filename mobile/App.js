@@ -10,11 +10,25 @@ const paperTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#0057D9',
-    secondary: '#2E7D32',
-    tertiary: '#6A1B9A',
+    primary: '#2457A6',
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#E7EEFB',
+    onPrimaryContainer: '#173B73',
+    secondary: '#5A6B85',
+    onSecondary: '#FFFFFF',
+    secondaryContainer: '#E8EDF5',
+    onSecondaryContainer: '#22324A',
+    tertiary: '#4D7B72',
+    onTertiary: '#FFFFFF',
+    tertiaryContainer: '#E4F1EE',
+    onTertiaryContainer: '#163C35',
     background: '#F4F6FA',
-    surface: '#FFFFFF'
+    surface: '#FFFFFF',
+    surfaceVariant: '#EDF2F7',
+    onSurface: '#132033',
+    onSurfaceVariant: '#5A6578',
+    outline: '#D4DCE8',
+    outlineVariant: '#E1E8F1'
   }
 };
 
@@ -25,7 +39,7 @@ const navTheme = {
     background: paperTheme.colors.background,
     card: paperTheme.colors.surface,
     primary: paperTheme.colors.primary,
-    text: '#101828'
+    text: paperTheme.colors.onSurface
   }
 };
 

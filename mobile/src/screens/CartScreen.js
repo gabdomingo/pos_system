@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Dialog, Divider, HelperText, Portal, Snackbar, Text, TextInput } from 'react-native-paper';
+import { Button, Card, Dialog, Divider, HelperText, IconButton, Portal, Snackbar, Text, TextInput } from 'react-native-paper';
 import { createSale } from '../api/client';
 import { API_BASE_URL } from '../constants/config';
 import { useCart } from '../context/CartContext';
@@ -83,10 +83,25 @@ function ChoiceCard({ active, title, copy, onPress, style }) {
   );
 }
 
+function ReceiptRow({ label, value, stacked = false, emphasized = false }) {
+  if (value === undefined || value === null || value === '') return null;
+
+  return (
+    <View style={[styles.receiptRow, stacked && styles.receiptRowStacked]}>
+      <Text style={styles.receiptLabel}>{label}</Text>
+      <Text style={[styles.receiptValue, stacked && styles.receiptValueStacked, emphasized && styles.receiptValueStrong]}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 export default function CartScreen() {
   const { items, subtotal, removeItem, updateQuantity, clearCart } = useCart();
   const { token, user } = useAuth();
   const layout = useResponsiveLayout();
+  const isSmallPhone = layout.width < 390;
+  const isVerySmallPhone = layout.width <= 360;
   const isPosCheckout = user?.role === 'admin' || user?.role === 'cashier';
   const [paymentMethod, setPaymentMethod] = useState(isPosCheckout ? 'Cash' : 'Card');
   const [amountTendered, setAmountTendered] = useState('');
@@ -366,19 +381,39 @@ export default function CartScreen() {
         <Card.Content>
           {items.length === 0 ? <Text style={styles.empty}>No items in cart yet.</Text> : null}
           {items.map((item) => (
-            <View key={item.id} style={styles.itemRow}>
-              <View style={styles.itemCopy}>
-                <Text variant="titleMedium">{item.name}</Text>
-                <Text style={styles.itemMeta}>{formatCurrency(item.price || 0)} each</Text>
-              </View>
-              <View style={styles.itemActions}>
-                <View style={styles.qtyPill}>
-                  <Button compact onPress={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
-                  <Text variant="titleSmall">{formatNumber(item.quantity)}</Text>
-                  <Button compact onPress={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
+            <View key={item.id} style={[styles.itemRow, isVerySmallPhone && styles.itemRowTight]}>
+              <View style={[styles.itemHeader, isVerySmallPhone && styles.itemHeaderTight]}>
+                <View style={styles.itemCopy}>
+                  <Text variant={isVerySmallPhone ? 'titleSmall' : 'titleMedium'}>{item.name}</Text>
+                  <Text style={[styles.itemMeta, isVerySmallPhone && styles.itemMetaTight]}>{formatCurrency(item.price || 0)} each</Text>
                 </View>
-                <Text variant="labelLarge">{formatCurrency(Number(item.price || 0) * Number(item.quantity || 0))}</Text>
-                <Button compact onPress={() => removeItem(item.id)}>Remove</Button>
+                <View style={[styles.itemTotalBadge, isVerySmallPhone && styles.itemTotalBadgeTight]}>
+                  <Text style={styles.itemTotalText}>{formatCurrency(Number(item.price || 0) * Number(item.quantity || 0))}</Text>
+                </View>
+              </View>
+              <View style={[styles.itemActions, (isSmallPhone || isVerySmallPhone) && styles.itemActionsCompact]}>
+                <View style={[styles.qtyPill, (isSmallPhone || isVerySmallPhone) && styles.qtyPillCompact, isVerySmallPhone && styles.qtyPillTiny]}>
+                  <IconButton
+                    icon="minus"
+                    size={isVerySmallPhone ? 14 : 16}
+                    mode="contained-tonal"
+                    containerColor="#E8EFFA"
+                    onPress={() => updateQuantity(item.id, item.quantity - 1)}
+                    style={[styles.qtyButton, isVerySmallPhone && styles.qtyButtonTiny]}
+                  />
+                  <Text variant="titleSmall" style={[styles.qtyValue, isVerySmallPhone && styles.qtyValueTiny]}>{formatNumber(item.quantity)}</Text>
+                  <IconButton
+                    icon="plus"
+                    size={isVerySmallPhone ? 14 : 16}
+                    mode="contained-tonal"
+                    containerColor="#E8EFFA"
+                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                    style={[styles.qtyButton, isVerySmallPhone && styles.qtyButtonTiny]}
+                  />
+                </View>
+                <Button compact mode="text" onPress={() => removeItem(item.id)} style={[styles.removeButton, isVerySmallPhone && styles.removeButtonTiny]} labelStyle={isVerySmallPhone ? styles.removeButtonLabelTiny : undefined}>
+                  Remove
+                </Button>
               </View>
             </View>
           ))}
@@ -504,31 +539,66 @@ export default function CartScreen() {
           </View>
 
           {isPosCheckout && paymentMethod === 'Cash' ? (
-            <View style={styles.posCashPanel}>
+            <View style={[styles.posCashPanel, isVerySmallPhone && styles.posCashPanelTight]}>
               <Text style={styles.cashLabel}>Cash Received</Text>
-              <View style={styles.posCashDisplay}>
-                <Text style={styles.posCashDisplayText}>{amountTendered || '0.00'}</Text>
+              <View style={[styles.posCashDisplay, isVerySmallPhone && styles.posCashDisplayTight]}>
+                <Text style={[styles.posCashDisplayText, isVerySmallPhone && styles.posCashDisplayTextTight]}>{amountTendered || '0.00'}</Text>
               </View>
-              <View style={styles.cashQuickGrid}>
+              <View style={[styles.cashQuickGrid, isVerySmallPhone && styles.cashQuickGridTight]}>
                 {QUICK_TENDER_VALUES.map((amount) => (
-                  <Button key={amount} mode="outlined" compact onPress={() => applyQuickTender(amount)} style={styles.cashQuickBtn}>
+                  <Button
+                    key={amount}
+                    mode="outlined"
+                    compact
+                    onPress={() => applyQuickTender(amount)}
+                    style={[styles.cashQuickBtn, isSmallPhone && styles.cashQuickBtnCompact, isVerySmallPhone && styles.cashQuickBtnTiny]}
+                    contentStyle={isVerySmallPhone ? styles.cashQuickBtnContentTiny : isSmallPhone ? styles.cashQuickBtnContentCompact : styles.cashQuickBtnContent}
+                    labelStyle={isVerySmallPhone ? styles.cashQuickBtnLabelTiny : undefined}
+                  >
                     {formatCurrency(amount, 0)}
                   </Button>
                 ))}
-                <Button mode="outlined" compact onPress={() => applyQuickTender(subtotal)} style={styles.cashQuickBtn}>
+                <Button
+                  mode="outlined"
+                  compact
+                  onPress={() => applyQuickTender(subtotal)}
+                  style={[styles.cashQuickBtn, isSmallPhone && styles.cashQuickBtnCompact, isVerySmallPhone && styles.cashQuickBtnTiny]}
+                  contentStyle={isVerySmallPhone ? styles.cashQuickBtnContentTiny : isSmallPhone ? styles.cashQuickBtnContentCompact : styles.cashQuickBtnContent}
+                  labelStyle={isVerySmallPhone ? styles.cashQuickBtnLabelTiny : undefined}
+                >
                   Exact
                 </Button>
               </View>
-              <View style={styles.cashKeypadGrid}>
+              <View style={[styles.cashKeypadGrid, isVerySmallPhone && styles.cashKeypadGridTight]}>
                 {CASH_KEYPAD_VALUES.map((value) => (
-                  <Button key={value} mode="contained-tonal" compact onPress={() => appendTenderValue(value)} style={styles.cashKeypadBtn}>
+                  <Button
+                    key={value}
+                    mode="contained-tonal"
+                    compact
+                    onPress={() => appendTenderValue(value)}
+                    style={[styles.cashKeypadBtn, isSmallPhone && styles.cashKeypadBtnCompact, isVerySmallPhone && styles.cashKeypadBtnTiny]}
+                    contentStyle={isVerySmallPhone ? styles.cashKeypadBtnContentTiny : isSmallPhone ? styles.cashKeypadBtnContentCompact : styles.cashKeypadBtnContent}
+                    labelStyle={isVerySmallPhone ? styles.cashKeypadLabelTiny : isSmallPhone ? styles.cashKeypadLabelCompact : styles.cashKeypadLabel}
+                  >
                     {value}
                   </Button>
                 ))}
-                <Button mode="outlined" compact onPress={backspaceTender} style={styles.cashKeypadBtn}>
-                  Back
-                </Button>
-                <Button mode="outlined" compact onPress={() => setAmountTendered('')} style={styles.cashKeypadBtn}>
+                <IconButton
+                  icon="backspace-outline"
+                  mode="outlined"
+                  size={isVerySmallPhone ? 16 : isSmallPhone ? 18 : 22}
+                  onPress={backspaceTender}
+                  style={[styles.cashKeypadBtn, isSmallPhone && styles.cashKeypadBtnCompact, isVerySmallPhone && styles.cashKeypadBtnTiny, styles.cashKeypadIconBtn, isVerySmallPhone && styles.cashKeypadIconBtnTiny]}
+                  accessibilityLabel="Backspace cash input"
+                />
+                <Button
+                  mode="outlined"
+                  compact
+                  onPress={() => setAmountTendered('')}
+                  style={[styles.cashKeypadBtn, isSmallPhone && styles.cashKeypadBtnCompact, isVerySmallPhone && styles.cashKeypadBtnTiny]}
+                  contentStyle={isVerySmallPhone ? styles.cashKeypadBtnContentTiny : isSmallPhone ? styles.cashKeypadBtnContentCompact : styles.cashKeypadBtnContent}
+                  labelStyle={isVerySmallPhone ? styles.cashKeypadLabelTiny : isSmallPhone ? styles.cashKeypadLabelCompact : styles.cashKeypadLabel}
+                >
                   Clear
                 </Button>
               </View>
@@ -541,13 +611,13 @@ export default function CartScreen() {
                   setAmountTendered(normalizeCashInput(value));
                   clearCheckoutErrors('amountTendered');
                 }}
-                style={styles.input}
+                style={[styles.input, isVerySmallPhone && styles.inputTight]}
                 error={Boolean(checkoutErrors.amountTendered)}
               />
               <HelperText type="error" visible={Boolean(checkoutErrors.amountTendered)}>{checkoutErrors.amountTendered}</HelperText>
-              <View style={[styles.changeCard, tenderedValue < subtotal ? styles.changeCardShort : styles.changeCardReady]}>
+              <View style={[styles.changeCard, isVerySmallPhone && styles.changeCardTight, tenderedValue < subtotal ? styles.changeCardShort : styles.changeCardReady]}>
                 <Text style={styles.changeLabel}>{tenderedValue < subtotal ? 'Still Needed' : 'Change Due'}</Text>
-                <Text style={styles.changeValue}>{formatCurrency(Math.abs(tenderedValue - subtotal))}</Text>
+                <Text style={[styles.changeValue, isVerySmallPhone && styles.changeValueTight]}>{formatCurrency(Math.abs(tenderedValue - subtotal))}</Text>
               </View>
             </View>
           ) : null}
@@ -626,28 +696,76 @@ export default function CartScreen() {
           <Dialog.Title>{receipt ? receipt.receiptNumber || `Sale #${receipt.id}` : 'Receipt'}</Dialog.Title>
           <Dialog.Content>
             {receipt ? (
-              <>
-                <Text>Total: {formatCurrency(receipt.total || 0)}</Text>
-                <Text style={styles.meta}>Payment: {receipt.paymentMethod || '-'}</Text>
-                <Text style={styles.meta}>Status: {receipt.status || 'completed'}</Text>
-                <Text style={styles.meta}>Date: {receipt.createdAt ? new Date(receipt.createdAt).toLocaleString() : '-'}</Text>
-                {(receipt.customerName || receipt.customer_name) ? <Text style={styles.meta}>Customer: {receipt.customerName || receipt.customer_name}</Text> : null}
-                {(receipt.customerPhone || receipt.customer_phone) ? <Text style={styles.meta}>Phone: {receipt.customerPhone || receipt.customer_phone}</Text> : null}
-                {(receipt.deliveryAddress || receipt.delivery_address) ? <Text style={styles.meta}>Address: {receipt.deliveryAddress || receipt.delivery_address}</Text> : null}
-                {(receipt.paymentReference || receipt.payment_reference || receipt.paymentLast4 || receipt.payment_last4) ? (
-                  <Text style={styles.meta}>Reference: {receipt.paymentReference || receipt.payment_reference || `Card ending in ${receipt.paymentLast4 || receipt.payment_last4}`}</Text>
-                ) : null}
-                <Divider style={styles.divider} />
-                {(receipt.items || []).map((item, idx) => (
-                  <Text key={`${item.id || idx}-${idx}`} style={styles.itemReceiptRow}>
-                    {(item.productName || item.product_name || 'Item')} x {formatNumber(item.quantity)} = {formatCurrency(item.lineTotal || item.line_total || 0)}
+              <View style={styles.receiptCard}>
+                <View style={styles.receiptHeader}>
+                  <Text style={styles.receiptHeaderLabel}>
+                    {receipt.paymentMethod === 'Cash on Delivery' ? 'Order Total' : 'Receipt Total'}
                   </Text>
-                ))}
+                  <Text variant="headlineSmall" style={styles.receiptHeaderTotal}>
+                    {formatCurrency(receipt.total || 0)}
+                  </Text>
+                </View>
+
+                <View style={styles.receiptSection}>
+                  <ReceiptRow label="Payment" value={receipt.paymentMethod || '-'} />
+                  <ReceiptRow label="Status" value={receipt.status || 'completed'} />
+                  <ReceiptRow
+                    label="Date"
+                    value={receipt.createdAt ? new Date(receipt.createdAt).toLocaleString() : '-'}
+                  />
+                </View>
+
+                {(receipt.customerName || receipt.customer_name || receipt.customerPhone || receipt.customer_phone || receipt.deliveryAddress || receipt.delivery_address) ? (
+                  <>
+                    <Divider style={styles.divider} />
+                    <View style={styles.receiptSection}>
+                      <Text style={styles.receiptSectionTitle}>Customer</Text>
+                      <ReceiptRow label="Name" value={receipt.customerName || receipt.customer_name} />
+                      <ReceiptRow label="Phone" value={receipt.customerPhone || receipt.customer_phone} />
+                      <ReceiptRow label="Address" value={receipt.deliveryAddress || receipt.delivery_address} stacked />
+                    </View>
+                  </>
+                ) : null}
+
+                {(receipt.paymentReference || receipt.payment_reference || receipt.paymentLast4 || receipt.payment_last4) ? (
+                  <>
+                    <Divider style={styles.divider} />
+                    <View style={styles.receiptSection}>
+                      <Text style={styles.receiptSectionTitle}>Payment Reference</Text>
+                      <ReceiptRow
+                        label="Reference"
+                        value={receipt.paymentReference || receipt.payment_reference || `Card ending in ${receipt.paymentLast4 || receipt.payment_last4}`}
+                        stacked
+                      />
+                    </View>
+                  </>
+                ) : null}
+
                 <Divider style={styles.divider} />
-                <Text>Subtotal: {formatCurrency(receipt.subtotal || 0)}</Text>
-                <Text>{receipt.paymentMethod === 'Cash on Delivery' ? 'Due on Delivery' : 'Paid'}: {formatCurrency(receipt.amountTendered || receipt.amount_tendered || receipt.total || 0)}</Text>
-                <Text>Change: {formatCurrency(receipt.changeAmount || receipt.change_amount || 0)}</Text>
-              </>
+                <View style={styles.receiptSection}>
+                  <Text style={styles.receiptSectionTitle}>Items</Text>
+                  {(receipt.items || []).map((item, idx) => (
+                    <View key={`${item.id || idx}-${idx}`} style={styles.itemReceiptRow}>
+                      <View style={styles.itemReceiptCopy}>
+                        <Text style={styles.itemReceiptName}>{item.productName || item.product_name || 'Item'}</Text>
+                        <Text style={styles.itemReceiptMeta}>Qty {formatNumber(item.quantity)}</Text>
+                      </View>
+                      <Text style={styles.itemReceiptAmount}>{formatCurrency(item.lineTotal || item.line_total || 0)}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <Divider style={styles.divider} />
+                <View style={styles.receiptSection}>
+                  <ReceiptRow label="Subtotal" value={formatCurrency(receipt.subtotal || 0)} />
+                  <ReceiptRow
+                    label={receipt.paymentMethod === 'Cash on Delivery' ? 'Due on Delivery' : 'Paid'}
+                    value={formatCurrency(receipt.amountTendered || receipt.amount_tendered || receipt.total || 0)}
+                    emphasized
+                  />
+                  <ReceiptRow label="Change" value={formatCurrency(receipt.changeAmount || receipt.change_amount || 0)} />
+                </View>
+              </View>
             ) : null}
           </Dialog.Content>
           <Dialog.Actions>
@@ -675,10 +793,10 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     borderRadius: 24,
-    backgroundColor: '#163567'
+    backgroundColor: '#183A70'
   },
   eyebrow: {
-    color: '#BFD4FF',
+    color: '#C8D8F7',
     fontWeight: '700',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -690,7 +808,7 @@ const styles = StyleSheet.create({
   },
   heroCopy: {
     marginTop: 8,
-    color: '#D9E5FF',
+    color: '#E4ECFA',
     lineHeight: 20
   },
   sectionCard: {
@@ -715,15 +833,15 @@ const styles = StyleSheet.create({
     width: '48.8%'
   },
   choiceCardActive: {
-    borderColor: '#2257BA',
+    borderColor: '#2457A6',
     backgroundColor: '#ECF3FF'
   },
   choiceTitle: {
-    color: '#18335F'
+    color: '#18355E'
   },
   choiceCopy: {
     marginTop: 4,
-    color: '#61708B',
+    color: '#5D6B82',
     lineHeight: 18
   },
   selectorLabel: {
@@ -739,6 +857,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: '#FFFFFF'
   },
+  inputTight: {
+    marginBottom: 8
+  },
   noteCard: {
     borderRadius: 18,
     borderWidth: 1,
@@ -749,7 +870,7 @@ const styles = StyleSheet.create({
   },
   noteCopy: {
     marginTop: 4,
-    color: '#61708B',
+    color: '#5D6B82',
     lineHeight: 18
   },
   posCashPanel: {
@@ -759,6 +880,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFE',
     padding: 14,
     marginBottom: 10
+  },
+  posCashPanelTight: {
+    padding: 10
   },
   cashLabel: {
     color: '#18335F',
@@ -774,11 +898,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 12
   },
+  posCashDisplayTight: {
+    minHeight: 58,
+    marginBottom: 10,
+    paddingHorizontal: 12
+  },
   posCashDisplayText: {
     color: '#FFFFFF',
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: 1
+  },
+  posCashDisplayTextTight: {
+    fontSize: 23
   },
   cashQuickGrid: {
     flexDirection: 'row',
@@ -786,8 +918,30 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10
   },
+  cashQuickGridTight: {
+    gap: 6,
+    marginBottom: 8
+  },
   cashQuickBtn: {
     minWidth: 92
+  },
+  cashQuickBtnCompact: {
+    minWidth: 78
+  },
+  cashQuickBtnTiny: {
+    minWidth: 66
+  },
+  cashQuickBtnContent: {
+    minHeight: 38
+  },
+  cashQuickBtnContentCompact: {
+    minHeight: 34
+  },
+  cashQuickBtnContentTiny: {
+    minHeight: 30
+  },
+  cashQuickBtnLabelTiny: {
+    fontSize: 12
   },
   cashKeypadGrid: {
     flexDirection: 'row',
@@ -795,8 +949,48 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10
   },
+  cashKeypadGridTight: {
+    gap: 6,
+    marginBottom: 8
+  },
   cashKeypadBtn: {
     width: '31%'
+  },
+  cashKeypadBtnCompact: {
+    width: '30.5%'
+  },
+  cashKeypadBtnTiny: {
+    width: '31.1%'
+  },
+  cashKeypadBtnContent: {
+    minHeight: 46
+  },
+  cashKeypadBtnContentCompact: {
+    minHeight: 40
+  },
+  cashKeypadBtnContentTiny: {
+    minHeight: 34
+  },
+  cashKeypadLabel: {
+    fontSize: 17,
+    fontWeight: '700'
+  },
+  cashKeypadLabelCompact: {
+    fontSize: 15,
+    fontWeight: '700'
+  },
+  cashKeypadLabelTiny: {
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  cashKeypadIconBtn: {
+    margin: 0,
+    height: 40,
+    borderRadius: 14
+  },
+  cashKeypadIconBtnTiny: {
+    height: 34,
+    borderRadius: 12
   },
   changeCard: {
     marginTop: 2,
@@ -806,6 +1000,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between'
+  },
+  changeCardTight: {
+    padding: 10
   },
   changeCardReady: {
     borderColor: '#B8E3C8',
@@ -824,34 +1021,102 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700'
   },
+  changeValueTight: {
+    fontSize: 16
+  },
   itemRow: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#ECF0F7'
+    borderBottomColor: '#ECF0F7',
+    gap: 12
+  },
+  itemRowTight: {
+    paddingVertical: 10,
+    gap: 8
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12
+  },
+  itemHeaderTight: {
+    gap: 8
   },
   itemCopy: {
-    marginBottom: 10
+    flex: 1
   },
   itemMeta: {
     color: '#667085',
     marginTop: 2
   },
+  itemMetaTight: {
+    fontSize: 12
+  },
+  itemTotalBadge: {
+    borderRadius: 999,
+    backgroundColor: '#F0F5FE',
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  itemTotalBadgeTight: {
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  itemTotalText: {
+    color: '#163567',
+    fontWeight: '700'
+  },
   itemActions: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
-    flexWrap: 'wrap'
+    gap: 10
+  },
+  itemActionsCompact: {
+    alignItems: 'stretch',
+    flexDirection: 'column'
   },
   qtyPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#D8E1EF',
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
     backgroundColor: '#F8FAFE'
+  },
+  qtyPillCompact: {
+    justifyContent: 'space-between'
+  },
+  qtyPillTiny: {
+    paddingHorizontal: 4,
+    paddingVertical: 2
+  },
+  qtyButton: {
+    margin: 0
+  },
+  qtyButtonTiny: {
+    transform: [{ scale: 0.92 }]
+  },
+  qtyValue: {
+    minWidth: 26,
+    textAlign: 'center'
+  },
+  qtyValueTiny: {
+    minWidth: 20,
+    fontSize: 13
+  },
+  removeButton: {
+    alignSelf: 'flex-end'
+  },
+  removeButtonTiny: {
+    alignSelf: 'stretch'
+  },
+  removeButtonLabelTiny: {
+    fontSize: 12
   },
   cardPreview: {
     borderRadius: 20,
@@ -916,11 +1181,91 @@ const styles = StyleSheet.create({
   checkoutButton: {
     marginTop: 8
   },
+  receiptCard: {
+    borderRadius: 20,
+    backgroundColor: '#F8FAFD',
+    padding: 14
+  },
+  receiptHeader: {
+    borderRadius: 16,
+    backgroundColor: '#ECF3FF',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 4
+  },
+  receiptHeaderLabel: {
+    color: '#5D6B82',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontSize: 11
+  },
+  receiptHeaderTotal: {
+    marginTop: 4,
+    color: '#18355E',
+    fontWeight: '700'
+  },
+  receiptSection: {
+    gap: 10,
+    paddingVertical: 10
+  },
+  receiptSectionTitle: {
+    color: '#18355E',
+    fontWeight: '700'
+  },
+  receiptRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12
+  },
+  receiptRowStacked: {
+    flexDirection: 'column',
+    gap: 4
+  },
+  receiptLabel: {
+    color: '#5D6B82',
+    flexShrink: 0
+  },
+  receiptValue: {
+    color: '#1B2431',
+    flex: 1,
+    textAlign: 'right'
+  },
+  receiptValueStacked: {
+    textAlign: 'left'
+  },
+  receiptValueStrong: {
+    color: '#18355E',
+    fontWeight: '700'
+  },
   divider: {
-    marginVertical: 8
+    marginVertical: 2
   },
   itemReceiptRow: {
-    marginTop: 4
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7EDF5'
+  },
+  itemReceiptCopy: {
+    flex: 1,
+    gap: 2
+  },
+  itemReceiptName: {
+    color: '#1B2431',
+    fontWeight: '600'
+  },
+  itemReceiptMeta: {
+    color: '#5D6B82',
+    fontSize: 12
+  },
+  itemReceiptAmount: {
+    color: '#18355E',
+    fontWeight: '700'
   },
   meta: {
     color: '#667085',

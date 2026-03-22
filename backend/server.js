@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
   res.send("Charlie PC Backend Running");
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const server = app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });

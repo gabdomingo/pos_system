@@ -1,15 +1,31 @@
 import { API_BASE_URL } from '../constants/config';
 
 async function request(path, { method = 'GET', token, body, headers = {} } = {}) {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: {
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (error) {
+    const rawMessage = typeof error?.message === 'string' ? error.message : '';
+    const normalizedMessage = rawMessage.toLowerCase();
+    const isConnectionError =
+      normalizedMessage.includes('load failed') ||
+      normalizedMessage.includes('network request failed') ||
+      normalizedMessage.includes('fetch failed');
+
+    throw new Error(
+      isConnectionError
+        ? `Can't reach the server at ${API_BASE_URL}. If you're on a phone, restart Expo with EXPO_PUBLIC_API_URL set to your Mac's LAN IP.`
+        : rawMessage || 'Request failed before reaching the server.'
+    );
+  }
 
   const text = await res.text();
   let data = null;

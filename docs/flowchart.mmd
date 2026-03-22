@@ -1,0 +1,36 @@
+flowchart LR
+    subgraph Presentation["Presentation Layer"]
+        Web["Web Application\nReact + Vite"]
+        Mobile["Mobile Application\nExpo + React Native"]
+    end
+
+    subgraph Services["Application / Service Layer"]
+        API["Express REST API"]
+        Auth["JWT Authentication\nand Role Middleware"]
+        Product["Product Service"]
+        Sale["Sales and Checkout Service"]
+        Report["Reporting Service"]
+        Ref["Reference Data Service"]
+    end
+
+    subgraph Data["Data Layer"]
+        DB[("SQLite Database")]
+        Addr["PH Address Reference Data"]
+        Backup["Automatic Database Backup"]
+    end
+
+    Web <--> |HTTPS + JSON| API
+    Mobile <--> |HTTPS + JSON| API
+
+    API --> Auth
+    API --> Product
+    API --> Sale
+    API --> Report
+    API --> Ref
+
+    Product <--> DB
+    Sale <--> DB
+    Report <--> DB
+    Auth <--> DB
+    Ref <--> Addr
+    DB --> Backup

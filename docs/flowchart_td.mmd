@@ -1,0 +1,38 @@
+flowchart TD
+    A([Start]) --> B["Open Charlie PC on Web or Mobile"]
+    B --> C{"User Role?"}
+
+    C -->|Customer| D["Browse Products"]
+    C -->|Cashier| E["Login as Cashier"]
+    C -->|Admin| F["Login as Admin"]
+
+    D --> G{"Add to Cart / Checkout?"}
+    G -->|No| D
+    G -->|Yes| H{"Logged in as Customer?"}
+    H -->|No| I["Prompt Login"]
+    I --> J["Authenticate via /api/login"]
+    J --> H
+    H -->|Yes| K["Enter Fulfillment, Payment, and Address Details"]
+    K --> L["Send Sale Request to /sales"]
+
+    E --> M["Open POS Counter Interface"]
+    M --> N["Add Products to Sale"]
+    N --> O["Enter Payment Details"]
+    O --> L
+
+    F --> P["Open Admin Dashboard"]
+    P --> Q{"Task Type?"}
+    Q -->|Manage Products| R["Create / Update / Delete Product"]
+    Q -->|Review Sales| S["View Dashboard and Sales Data"]
+    R --> T["Send Request to /products"]
+    S --> U["Read /reports and /sales data"]
+
+    L --> V["Backend Validates Token, Role, Stock, Totals, Payment, and Address"]
+    V --> W{"Validation Passed?"}
+    W -->|No| X["Return Error to Client"]
+    W -->|Yes| Y["Store Sale, Store Sale Items, Deduct Stock, Generate Receipt"]
+    Y --> Z["Return Receipt / Updated Data"]
+    Z --> AA([End])
+    T --> AA
+    U --> AA
+    X --> AA

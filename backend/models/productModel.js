@@ -1,10 +1,22 @@
 import { getDB } from "../config/database.js";
-import { cleanupLegacyDemoProducts, seedDemoProducts } from "../data/demoProducts.js";
+import {
+  cleanupLegacyDemoProducts,
+  cleanupProductsWithoutPhotos,
+  resolveProductImage,
+  sanitizeCategory,
+  seedDemoProducts
+} from "../data/demoProducts.js";
 
 export async function getAllProducts(req, res) {
   try {
     const database = getDB();
-    const products = await database.all("SELECT * FROM products ORDER BY id DESC");
+    const products = await database.all(
+      `SELECT *
+       FROM products
+       WHERE image IS NOT NULL
+         AND TRIM(image) <> ''
+       ORDER BY id DESC`
+    );
     res.json(products);
   } catch (err) {
     console.error('getAllProducts error:', err);
@@ -16,12 +28,20 @@ export async function seedProducts(req, res) {
   try {
     const database = getDB();
     const removedLegacy = await cleanupLegacyDemoProducts(database);
+    const removedWithoutPhotos = await cleanupProductsWithoutPhotos(database);
     const result = await seedDemoProducts(database);
 
-    const products = await database.all("SELECT * FROM products ORDER BY id DESC");
+    const products = await database.all(
+      `SELECT *
+       FROM products
+       WHERE image IS NOT NULL
+         AND TRIM(image) <> ''
+       ORDER BY id DESC`
+    );
     res.json({
       ...result,
       removedLegacy,
+      removedWithoutPhotos,
       products
     });
   } catch (err) {
@@ -34,8 +54,30 @@ export async function addProduct(req, res) {
   try {
     const db = getDB();
     const { name, category, price, stock, barcode, image } = req.body;
-    if (!name) return res.status(400).json({ error: 'Name required' });
-    const result = await db.run(`INSERT INTO products (name, category, price, stock, barcode, image) VALUES (?, ?, ?, ?, ?, ?)`, name, category || '', price || 0, stock || 0, barcode || '', image || '');
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    if (!trimmedName) return res.status(400).json({ error: 'Name required' });
+    const normalizedCategory = sanitizeCategory(category);
+    if (!normalizedCategory) {
+      return res.status(400).json({ error: 'Valid category required' });
+    }
+
+    const trimmedBarcode = typeof barcode === 'string' ? barcode.trim() : '';
+    const resolvedImage = resolveProductImage({
+      category: normalizedCategory,
+      image,
+      seed: trimmedBarcode || trimmedName
+    });
+
+    const result = await db.run(
+      `INSERT INTO products (name, category, price, stock, barcode, image)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      trimmedName,
+      normalizedCategory,
+      price || 0,
+      stock || 0,
+      trimmedBarcode,
+      resolvedImage
+    );
     const id = result.lastID || (result.stmt && result.stmt.lastID) || null;
     const product = await db.get(`SELECT * FROM products WHERE id = ?`, id);
     res.json(product);
@@ -62,12 +104,46 @@ export async function updateProduct(req, res) {
   try {
     const db = getDB();
     const { id } = req.params;
-    const { name, category, price, stock, barcode, image } = req.body;
+    const { name, category, price, stock, barcode, image, resetImage } = req.body;
     try {
       const size = Buffer.byteLength(JSON.stringify(req.body || {}), 'utf8');
       console.log(`updateProduct: id=${id} payload-size=${size} bytes`);
     } catch (e) {}
-    await db.run(`UPDATE products SET name = ?, category = ?, price = ?, stock = ?, barcode = ?, image = ? WHERE id = ?`, name, category, price, stock, barcode, image || '', id);
+    const existing = await db.get(`SELECT * FROM products WHERE id = ?`, id);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+
+    const normalizedCategory = sanitizeCategory(category);
+    if (!normalizedCategory) {
+      return res.status(400).json({ error: 'Valid category required' });
+    }
+
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    if (!trimmedName) {
+      return res.status(400).json({ error: 'Name required' });
+    }
+
+    const trimmedBarcode = typeof barcode === 'string' ? barcode.trim() : '';
+    const shouldResetImage = Boolean(resetImage);
+    const resolvedImage = resolveProductImage({
+      category: normalizedCategory,
+      image,
+      seed: trimmedBarcode || trimmedName || existing.barcode || existing.name,
+      existingImage: shouldResetImage ? '' : existing.image,
+      previousCategory: shouldResetImage ? '' : existing.category
+    });
+
+    await db.run(
+      `UPDATE products
+       SET name = ?, category = ?, price = ?, stock = ?, barcode = ?, image = ?
+       WHERE id = ?`,
+      trimmedName,
+      normalizedCategory,
+      price || 0,
+      stock || 0,
+      trimmedBarcode,
+      resolvedImage,
+      id
+    );
     const product = await db.get(`SELECT * FROM products WHERE id = ?`, id);
     res.json(product);
   } catch (err) {
@@ -95,7 +171,16 @@ export async function searchProducts(req, res) {
     const db = getDB();
     const q = (req.query.q || '').trim();
     if (!q) return getAllProducts(req, res);
-    const products = await db.all(`SELECT * FROM products WHERE name LIKE ? OR category LIKE ? ORDER BY id DESC`, `%${q}%`, `%${q}%`);
+    const products = await db.all(
+      `SELECT *
+       FROM products
+       WHERE image IS NOT NULL
+         AND TRIM(image) <> ''
+         AND (name LIKE ? OR category LIKE ?)
+       ORDER BY id DESC`,
+      `%${q}%`,
+      `%${q}%`
+    );
     res.json(products);
   } catch (err) {
     console.error('searchProducts error:', err);

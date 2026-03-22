@@ -1,5 +1,5 @@
 import { initDB, getDB } from '../config/database.js';
-import { cleanupLegacyDemoProducts, seedDemoProducts } from '../data/demoProducts.js';
+import { cleanupLegacyDemoProducts, cleanupProductsWithoutPhotos, seedDemoProducts } from '../data/demoProducts.js';
 import { reconcileLegacyAccountEmails, upsertAccounts } from '../utils/accountSeeding.js';
 
 (async function seed() {
@@ -24,9 +24,10 @@ import { reconcileLegacyAccountEmails, upsertAccounts } from '../utils/accountSe
     }
 
     const removedLegacy = await cleanupLegacyDemoProducts(db);
+    const removedWithoutPhotos = await cleanupProductsWithoutPhotos(db);
     const result = await seedDemoProducts(db);
     console.log(
-      `Products ready: ${result.inserted} inserted, ${result.updated} updated, ${removedLegacy} old placeholders removed.`
+      `Products ready: ${result.inserted} inserted, ${result.updated} updated, ${result.removedStale} stale products removed, ${removedLegacy} old placeholders removed, ${removedWithoutPhotos} products without photos removed.`
     );
 
     console.log('Seeding complete.');

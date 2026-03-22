@@ -7,6 +7,19 @@ import { screenShell } from '../styles/screenShell';
 import { formatCurrency, formatNumber } from '../utils/format';
 import { useResponsiveLayout } from '../utils/responsive';
 
+function SaleDetailRow({ label, value, stacked = false, emphasized = false }) {
+  if (value === undefined || value === null || value === '') return null;
+
+  return (
+    <View style={[styles.detailRow, stacked && styles.detailRowStacked]}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={[styles.detailValue, stacked && styles.detailValueStacked, emphasized && styles.detailValueStrong]}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 export default function AdminSalesScreen() {
   const { token } = useAuth();
   const layout = useResponsiveLayout();
@@ -73,12 +86,12 @@ export default function AdminSalesScreen() {
                 titleNumberOfLines={2}
               />
               <Card.Content>
-                <Text variant="titleMedium">{formatCurrency(item.total || 0)}</Text>
+                <Text variant="titleMedium" style={styles.saleAmount}>{formatCurrency(item.total || 0)}</Text>
                 <Text style={styles.meta}>Payment: {item.paymentMethod || '-'}</Text>
                 <Text style={styles.meta}>Status: {item.status || 'completed'}</Text>
               </Card.Content>
-              <Card.Actions>
-                <Button onPress={() => openDetail(item.id)}>View Details</Button>
+              <Card.Actions style={styles.cardActions}>
+                <Button mode="contained-tonal" onPress={() => openDetail(item.id)}>View Details</Button>
               </Card.Actions>
             </Card>
           </View>
@@ -90,45 +103,80 @@ export default function AdminSalesScreen() {
           <Dialog.Title>{selected ? selected.receiptNumber || selected.receipt_number || `Sale #${formatNumber(selected.id, { maximumFractionDigits: 0 })}` : 'Sale Detail'}</Dialog.Title>
           <Dialog.Content>
             {selected ? (
-              <>
-                <Text>Receipt: {selected.receiptNumber || selected.receipt_number || '-'}</Text>
-                <Text>Status: {selected.status || 'completed'}</Text>
+              <View style={styles.detailCard}>
+                <View style={styles.detailHeader}>
+                  <Text style={styles.detailHeaderLabel}>Receipt Total</Text>
+                  <Text variant="headlineSmall" style={styles.detailHeaderTotal}>{formatCurrency(selected.total || 0)}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <SaleDetailRow label="Receipt" value={selected.receiptNumber || selected.receipt_number || '-'} />
+                  <SaleDetailRow label="Status" value={selected.status || 'completed'} />
+                  <SaleDetailRow label="Payment" value={selected.paymentMethod || '-'} />
+                  <SaleDetailRow label="Fulfillment" value={selected.fulfillmentType || selected.fulfillment_type || '-'} />
+                </View>
+
+                {(selected.customerName || selected.customer_name || selected.customerPhone || selected.customer_phone || selected.customerEmail || selected.customer_email || selected.deliveryAddress || selected.delivery_address) ? (
+                  <>
+                    <Divider style={styles.divider} />
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailSectionTitle}>Customer</Text>
+                      <SaleDetailRow label="Name" value={selected.customerName || selected.customer_name} />
+                      <SaleDetailRow label="Phone" value={selected.customerPhone || selected.customer_phone} />
+                      <SaleDetailRow label="Email" value={selected.customerEmail || selected.customer_email} stacked />
+                      <SaleDetailRow label="Address" value={selected.deliveryAddress || selected.delivery_address} stacked />
+                    </View>
+                  </>
+                ) : null}
+
                 {(selected.paymentReference || selected.payment_reference || selected.paymentLast4 || selected.payment_last4) ? (
-                  <Text>Reference: {selected.paymentReference || selected.payment_reference || `Card ending in ${selected.paymentLast4 || selected.payment_last4}`}</Text>
+                  <>
+                    <Divider style={styles.divider} />
+                    <View style={styles.detailSection}>
+                      <Text style={styles.detailSectionTitle}>Payment Reference</Text>
+                      <SaleDetailRow
+                        label="Reference"
+                        value={selected.paymentReference || selected.payment_reference || `Card ending in ${selected.paymentLast4 || selected.payment_last4}`}
+                        stacked
+                      />
+                    </View>
+                  </>
                 ) : null}
-                <Text>Fulfillment: {selected.fulfillmentType || selected.fulfillment_type || '-'}</Text>
-                {(selected.customerName || selected.customer_name) ? (
-                  <Text>Customer: {selected.customerName || selected.customer_name}</Text>
-                ) : null}
-                {(selected.customerPhone || selected.customer_phone) ? (
-                  <Text>Phone: {selected.customerPhone || selected.customer_phone}</Text>
-                ) : null}
-                {(selected.customerEmail || selected.customer_email) ? (
-                  <Text>Email: {selected.customerEmail || selected.customer_email}</Text>
-                ) : null}
-                {(selected.deliveryAddress || selected.delivery_address) ? (
-                  <Text>Address: {selected.deliveryAddress || selected.delivery_address}</Text>
-                ) : null}
-                <Text>Subtotal: {formatCurrency(selected.subtotal || 0)}</Text>
-                {Number(selected.discountAmount || selected.discount_amount || 0) > 0 ? (
-                  <Text>Discount: {formatCurrency(selected.discountAmount || selected.discount_amount || 0)}</Text>
-                ) : null}
-                {Number(selected.taxAmount || selected.tax_amount || 0) > 0 ? (
-                  <Text>Tax: {formatCurrency(selected.taxAmount || selected.tax_amount || 0)}</Text>
-                ) : null}
-                <Text>Total: {formatCurrency(selected.total || 0)}</Text>
-                <Text style={styles.meta}>Payment: {selected.paymentMethod || '-'}</Text>
-                <Text style={styles.meta}>Tendered: {formatCurrency(selected.amountTendered || selected.amount_tendered || selected.total || 0)}</Text>
-                <Text style={styles.meta}>Change: {formatCurrency(selected.changeAmount || selected.change_amount || 0)}</Text>
+
                 <Divider style={styles.divider} />
-                <Text variant="titleSmall">Items</Text>
-                {(selected.items || []).map((item, idx) => (
-                  <Text key={`${item.id || idx}-${idx}`} style={styles.itemRow}>
-                    {(item.productName || item.product_name || (item.product_id != null ? `Product #${formatNumber(item.product_id, { maximumFractionDigits: 0 })}` : 'Product'))} x {formatNumber(item.quantity)} = {formatCurrency(item.lineTotal || item.line_total || 0)}
-                  </Text>
-                ))}
-                {(!selected.items || selected.items.length === 0) ? <Text style={styles.meta}>No items found</Text> : null}
-              </>
+                <View style={styles.detailSection}>
+                  <Text style={styles.detailSectionTitle}>Items</Text>
+                  {(selected.items || []).map((item, idx) => (
+                    <View key={`${item.id || idx}-${idx}`} style={styles.itemDetailRow}>
+                      <View style={styles.itemDetailCopy}>
+                        <Text style={styles.itemDetailName}>
+                          {item.productName || item.product_name || (item.product_id != null ? `Product #${formatNumber(item.product_id, { maximumFractionDigits: 0 })}` : 'Product')}
+                        </Text>
+                        <Text style={styles.itemDetailMeta}>Qty {formatNumber(item.quantity)}</Text>
+                      </View>
+                      <Text style={styles.itemDetailAmount}>{formatCurrency(item.lineTotal || item.line_total || 0)}</Text>
+                    </View>
+                  ))}
+                  {(!selected.items || selected.items.length === 0) ? <Text style={styles.meta}>No items found</Text> : null}
+                </View>
+
+                <Divider style={styles.divider} />
+                <View style={styles.detailSection}>
+                  <SaleDetailRow label="Subtotal" value={formatCurrency(selected.subtotal || 0)} />
+                  {Number(selected.discountAmount || selected.discount_amount || 0) > 0 ? (
+                    <SaleDetailRow label="Discount" value={formatCurrency(selected.discountAmount || selected.discount_amount || 0)} />
+                  ) : null}
+                  {Number(selected.taxAmount || selected.tax_amount || 0) > 0 ? (
+                    <SaleDetailRow label="Tax" value={formatCurrency(selected.taxAmount || selected.tax_amount || 0)} />
+                  ) : null}
+                  <SaleDetailRow
+                    label="Tendered"
+                    value={formatCurrency(selected.amountTendered || selected.amount_tendered || selected.total || 0)}
+                    emphasized
+                  />
+                  <SaleDetailRow label="Change" value={formatCurrency(selected.changeAmount || selected.change_amount || 0)} />
+                </View>
+              </View>
             ) : null}
           </Dialog.Content>
           <Dialog.Actions>
@@ -163,6 +211,13 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 22
   },
+  saleAmount: {
+    color: '#163567'
+  },
+  cardActions: {
+    paddingHorizontal: 12,
+    paddingBottom: 12
+  },
   meta: {
     ...screenShell.metaText,
     marginTop: 4
@@ -170,8 +225,82 @@ const styles = StyleSheet.create({
   divider: {
     marginVertical: 10
   },
-  itemRow: {
-    marginTop: 4
+  detailCard: {
+    borderRadius: 18,
+    backgroundColor: '#F8FAFE',
+    padding: 16
+  },
+  detailHeader: {
+    borderRadius: 18,
+    backgroundColor: '#163567',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 8
+  },
+  detailHeaderLabel: {
+    color: '#C8D8F7',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontSize: 12
+  },
+  detailHeaderTotal: {
+    color: '#FFFFFF',
+    marginTop: 6
+  },
+  detailSection: {
+    gap: 8
+  },
+  detailSectionTitle: {
+    color: '#18355E',
+    fontWeight: '700',
+    marginBottom: 2
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12
+  },
+  detailRowStacked: {
+    flexDirection: 'column',
+    gap: 4
+  },
+  detailLabel: {
+    color: '#667085'
+  },
+  detailValue: {
+    flex: 1,
+    color: '#18355E',
+    textAlign: 'right'
+  },
+  detailValueStacked: {
+    textAlign: 'left'
+  },
+  detailValueStrong: {
+    fontWeight: '700'
+  },
+  itemDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingVertical: 4
+  },
+  itemDetailCopy: {
+    flex: 1
+  },
+  itemDetailName: {
+    color: '#18355E',
+    fontWeight: '600'
+  },
+  itemDetailMeta: {
+    color: '#667085',
+    marginTop: 2
+  },
+  itemDetailAmount: {
+    color: '#18355E',
+    fontWeight: '700'
   },
   empty: {
     ...screenShell.emptyText,

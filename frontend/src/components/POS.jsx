@@ -604,5 +604,5 @@ export default function POS({ auth, cashierMode = false, onLogout }) {
         </div>
       )}
     </div>
-  );
+ );
 }

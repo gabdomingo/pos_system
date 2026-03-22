@@ -32,8 +32,36 @@ export default function Login({ onLogin, onNavigate }) {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/login`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email, password, role }) });
-      const data = await res.json();
+      let res;
+      try {
+        res = await fetch(`${API}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, role })
+        });
+      } catch (networkError) {
+        const rawMessage = typeof networkError?.message === 'string' ? networkError.message : '';
+        const normalized = rawMessage.toLowerCase();
+        const isConnectionError =
+          normalized.includes('load failed') ||
+          normalized.includes('failed to fetch') ||
+          normalized.includes('networkerror');
+
+        throw new Error(
+          isConnectionError
+            ? `Can't reach the server at ${API}. Make sure the backend is running on port 5001.`
+            : rawMessage || 'Login request failed before reaching the server.'
+        );
+      }
+
+      const text = await res.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (parseError) {
+        data = null;
+      }
+
       if (!res.ok) throw new Error(data.error || 'Login failed');
       onLogin({ token: data.token, user: data.user });
       if (remember) {

@@ -9,10 +9,10 @@ import { useResponsiveLayout } from '../utils/responsive';
 
 function StatCard({ label, value, style }) {
   return (
-    <Card style={[screenShell.sectionCard, styles.statCard, style]}>
+    <Card style={[screenShell.sectionCardSoft, styles.statCard, style]}>
       <Card.Content>
         <Text style={styles.statLabel}>{label}</Text>
-        <Text variant="headlineSmall">{value}</Text>
+        <Text variant="headlineSmall" style={styles.statValue}>{value}</Text>
       </Card.Content>
     </Card>
   );
@@ -70,12 +70,14 @@ export default function AdminDashboardScreen() {
 
       <View style={[styles.panelsGrid, layout.isExpanded && styles.panelsGridWide]}>
         <Card style={[screenShell.sectionCard, styles.panel, layout.isExpanded && styles.panelWide]}>
-          <Card.Title title="Top Products" />
+          <Card.Title title="Top Products" subtitle="Best-selling items today" />
           <Card.Content>
             {(data?.topProducts || []).map((product) => (
-              <View key={product.id} style={styles.row}>
-                <Text style={styles.rowCopy}>{product.name}</Text>
-                <Chip compact>{formatNumber(product.qty_sold || 0)} sold</Chip>
+              <View key={product.id} style={styles.rowCard}>
+                <View style={styles.row}>
+                  <Text style={styles.rowCopy}>{product.name}</Text>
+                  <Chip compact style={styles.dataChip}>{formatNumber(product.qty_sold || 0)} sold</Chip>
+                </View>
               </View>
             ))}
             {(!data?.topProducts || data.topProducts.length === 0) ? <Text style={styles.empty}>No sales yet</Text> : null}
@@ -83,15 +85,17 @@ export default function AdminDashboardScreen() {
         </Card>
 
         <Card style={[screenShell.sectionCard, styles.panel, layout.isExpanded && styles.panelWide]}>
-          <Card.Title title="Recent Transactions" />
+          <Card.Title title="Recent Transactions" subtitle="Newest completed receipts" />
           <Card.Content>
             {(data?.recentTransactions || []).map((sale) => (
-              <View key={sale.id} style={styles.saleRow}>
-                <View style={styles.saleCopy}>
-                  <Text variant="labelLarge">Sale #{formatNumber(sale.id, { maximumFractionDigits: 0 })}</Text>
-                  <Text style={styles.meta}>{new Date(sale.createdAt).toLocaleString()}</Text>
+              <View key={sale.id} style={styles.rowCard}>
+                <View style={styles.saleRow}>
+                  <View style={styles.saleCopy}>
+                    <Text variant="labelLarge">Sale #{formatNumber(sale.id, { maximumFractionDigits: 0 })}</Text>
+                    <Text style={styles.meta}>{new Date(sale.createdAt).toLocaleString()}</Text>
+                  </View>
+                  <Text variant="titleMedium" style={styles.saleValue}>{formatCurrency(sale.total || 0)}</Text>
                 </View>
-                <Text variant="titleMedium">{formatCurrency(sale.total || 0)}</Text>
               </View>
             ))}
             {(!data?.recentTransactions || data.recentTransactions.length === 0) ? <Text style={styles.empty}>No transactions yet</Text> : null}
@@ -130,6 +134,9 @@ const styles = StyleSheet.create({
     color: '#667085',
     marginBottom: 6
   },
+  statValue: {
+    color: '#18355E'
+  },
   panelsGrid: {
     gap: 10
   },
@@ -142,6 +149,13 @@ const styles = StyleSheet.create({
   },
   panelWide: {
     flex: 1
+  },
+  rowCard: {
+    borderRadius: 18,
+    backgroundColor: '#F7F9FD',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 10
   },
   row: {
     flexDirection: 'row',
@@ -162,6 +176,12 @@ const styles = StyleSheet.create({
   },
   saleCopy: {
     flex: 1
+  },
+  saleValue: {
+    color: '#163567'
+  },
+  dataChip: {
+    backgroundColor: '#E7EEF9'
   },
   meta: {
     ...screenShell.metaText

@@ -23,13 +23,17 @@ const Tab = createBottomTabNavigator();
 function getTabScreenOptions(labelPosition) {
   return ({ route }) => ({
     headerTitleAlign: 'center',
-    tabBarActiveTintColor: '#0057D9',
+    headerTintColor: '#173B73',
+    tabBarActiveTintColor: '#2457A6',
+    tabBarInactiveTintColor: '#667085',
     tabBarLabelPosition: labelPosition,
     tabBarStyle: {
       height: labelPosition === 'beside-icon' ? 68 : 62,
       paddingHorizontal: labelPosition === 'beside-icon' ? 12 : 0,
       paddingBottom: 8,
-      paddingTop: 8
+      paddingTop: 8,
+      backgroundColor: '#FFFFFF',
+      borderTopColor: '#DDE4EF'
     },
     tabBarItemStyle: labelPosition === 'beside-icon'
       ? {

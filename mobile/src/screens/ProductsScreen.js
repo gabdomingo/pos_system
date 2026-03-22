@@ -73,10 +73,10 @@ export default function ProductsScreen() {
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={() => loadProducts(query)}
-            style={styles.search}
+            style={[styles.search, layout.isCompact && styles.searchCompact]}
           />
 
-          <View style={styles.actionsRow}>
+          <View style={[styles.actionsRow, layout.isCompact && styles.actionsRowCompact]}>
             <Button mode="contained-tonal" onPress={() => loadProducts(query)}>Search</Button>
             <Button onPress={() => { setQuery(''); loadProducts(''); }}>Clear</Button>
           </View>
@@ -93,13 +93,14 @@ export default function ProductsScreen() {
         columnWrapperStyle={layout.productColumns > 1 ? styles.columnWrap : undefined}
         contentContainerStyle={[
           styles.listContent,
+          layout.isCompact && styles.listContentCompact,
           { alignSelf: 'center', width: '100%', maxWidth: layout.maxContentWidth }
         ]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={!loading ? <Text style={styles.empty}>No products found.</Text> : null}
         renderItem={({ item }) => (
           <View style={getCardSlotStyle(layout.productColumns)}>
-            <Card style={[screenShell.sectionCard, styles.card]}>
+            <Card style={[screenShell.sectionCard, styles.card, layout.isCompact && styles.cardCompact]}>
               {item.image ? <Card.Cover source={{ uri: item.image }} style={[styles.cover, layout.productColumns > 1 && styles.coverWide]} /> : null}
               <Card.Title title={item.name} subtitle={item.category || 'Uncategorized'} titleNumberOfLines={2} subtitleNumberOfLines={1} />
               <Card.Content>
@@ -110,7 +111,7 @@ export default function ProductsScreen() {
                   </Chip>
                 </View>
               </Card.Content>
-              <Card.Actions>
+              <Card.Actions style={styles.cardActions}>
                 <Button mode="contained" onPress={() => onAdd(item)} disabled={Number(item.stock || 0) <= 0}>
                   Add to Cart
                 </Button>
@@ -135,39 +136,56 @@ function getCardSlotStyle(columns) {
 
 const styles = StyleSheet.create({
   toolbarCard: {
-    marginTop: 12
+    marginTop: 14,
+    marginBottom: 4
   },
   search: {
-    borderRadius: 14
+    borderRadius: 14,
+    backgroundColor: '#F8FAFD'
+  },
+  searchCompact: {
+    marginBottom: 6
   },
   actionsRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 8,
+    marginTop: 10,
     marginBottom: 8
   },
+  actionsRowCompact: {
+    marginTop: 12,
+    marginBottom: 4
+  },
   listContent: {
-    paddingBottom: 20,
-    gap: 10
+    paddingTop: 6,
+    paddingBottom: 26,
+    gap: 12
+  },
+  listContentCompact: {
+    paddingTop: 10,
+    paddingBottom: 32
   },
   columnWrap: {
     justifyContent: 'space-between',
-    gap: 12
+    gap: 14
   },
   cardSlotSingle: {
     width: '100%',
-    marginBottom: 12
+    marginBottom: 16
   },
   cardSlotDouble: {
     width: '48.8%',
-    marginBottom: 12
+    marginBottom: 16
   },
   cardSlotTriple: {
     width: '31.9%',
-    marginBottom: 12
+    marginBottom: 16
   },
   card: {
     overflow: 'hidden'
+  },
+  cardCompact: {
+    marginHorizontal: 2
   },
   cover: {
     height: 150
@@ -178,8 +196,13 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
+    marginTop: 8,
     flexWrap: 'wrap'
+  },
+  cardActions: {
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    paddingTop: 4
   },
   empty: {
     ...screenShell.emptyText,

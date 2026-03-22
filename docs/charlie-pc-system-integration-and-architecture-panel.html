@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Charlie PC System Integration and Architecture</title>
+  <style>
+    @page {
+      margin: 1in;
+    }
+    body {
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      color: #111;
+      margin: 0;
+      padding: 0;
+    }
+    h1, h2, h3, h4 {
+      font-weight: bold;
+      margin: 0 0 12pt;
+    }
+    h1 {
+      font-size: 16pt;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    h2 {
+      font-size: 14pt;
+      margin-top: 18pt;
+    }
+    h3 {
+      font-size: 12pt;
+      margin-top: 14pt;
+    }
+    h4 {
+      font-size: 12pt;
+      margin-top: 12pt;
+    }
+    p {
+      margin: 0 0 10pt;
+      text-align: justify;
+    }
+    ul, ol {
+      margin: 0 0 12pt 24pt;
+    }
+    li {
+      margin-bottom: 6pt;
+    }
+    .page-break {
+      page-break-after: always;
+    }
+    .title-page {
+      min-height: 9in;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+    .title-page p {
+      text-align: center;
+    }
+    .spacer-lg {
+      height: 36pt;
+    }
+    .spacer-xl {
+      height: 72pt;
+    }
+    .center {
+      text-align: center;
+    }
+    .approval-block {
+      margin-top: 28pt;
+    }
+    .signature-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 28pt;
+    }
+    .signature-grid td {
+      width: 50%;
+      padding: 26pt 12pt 12pt;
+      vertical-align: bottom;
+      text-align: center;
+    }
+    .signature-line {
+      border-top: 1px solid #111;
+      padding-top: 6pt;
+      display: block;
+    }
+    .toc-list, .lof-list {
+      list-style: none;
+      padding-left: 0;
+      margin-left: 0;
+    }
+    .toc-list li, .lof-list li {
+      margin-bottom: 6pt;
+    }
+    .figure {
+      margin: 16pt 0 22pt;
+      text-align: center;
+    }
+    .figure img {
+      max-width: 100%;
+      border: 1px solid #bbb;
+    }
+    .figure .caption {
+      margin-top: 8pt;
+      font-size: 11pt;
+      text-align: center;
+    }
+    .table-title {
+      margin: 12pt 0 6pt;
+      font-style: italic;
+      text-align: center;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14pt;
+    }
+    table.data-table th,
+    table.data-table td {
+      border: 1px solid #444;
+      padding: 8pt;
+      vertical-align: top;
+      text-align: left;
+    }
+    table.data-table th {
+      background: #f2f2f2;
+    }
+    .appendix-list code {
+      font-family: "Courier New", monospace;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+  <section class="title-page">
+    <p>Republic of the Philippines</p>
+    <p>[Name of School / University]</p>
+    <p>[College / Department]</p>
+    <div class="spacer-xl"></div>
+    <h1>Charlie PC Web and Mobile System Integration and Architecture Documentation</h1>
+    <p>A Formal System Integration and Architecture Report for the Charlie PC Retail Platform</p>
+    <div class="spacer-xl"></div>
+    <p>A Documentation Report Presented to the Panel</p>
+    <p>in Partial Fulfillment of the Requirements for</p>
+    <p>[Course / Subject Title]</p>
+    <div class="spacer-xl"></div>
+    <p>Submitted by:</p>
+    <p>[Name of Proponent 1]</p>
+    <p>[Name of Proponent 2]</p>
+    <p>[Name of Proponent 3]</p>
+    <div class="spacer-xl"></div>
+    <p>Adviser:</p>
+    <p>[Name of Adviser]</p>
+    <div class="spacer-xl"></div>
+    <p>March 2026</p>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Approval Sheet</h1>
+    <p>
+      This documentation entitled <strong>Charlie PC Web and Mobile System Integration and Architecture Documentation</strong>,
+      prepared and submitted by the proponents named above, is hereby presented to the panel as evidence of the
+      system integration, design decisions, and architectural implementation of the Charlie PC retail platform.
+    </p>
+    <p>
+      The undersigned certify that this report has been reviewed and recommended for acceptance in partial fulfillment
+      of the academic requirements for the course or subject indicated by the institution.
+    </p>
+
+    <table class="signature-grid">
+      <tr>
+        <td><span class="signature-line">[Name of Adviser]<br />Adviser</span></td>
+        <td><span class="signature-line">[Name of Panel Chair]<br />Panel Chair</span></td>
+      </tr>
+      <tr>
+        <td><span class="signature-line">[Name of Panel Member 1]<br />Panel Member</span></td>
+        <td><span class="signature-line">[Name of Panel Member 2]<br />Panel Member</span></td>
+      </tr>
+      <tr>
+        <td colspan="2"><span class="signature-line">[Name of Dean / Program Head]<br />Dean / Program Head</span></td>
+      </tr>
+    </table>
+
+    <div class="approval-block center">
+      <p>Date Approved: ________________________________</p>
+    </div>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Abstract</h1>
+    <p>
+      Charlie PC is an integrated retail system developed for a computer parts and accessories shop that requires one
+      consistent platform for customer ordering, cashier point-of-sale processing, and administrative monitoring.
+      The implemented solution consists of a web application, a mobile application, and a shared Express-based backend
+      connected to an SQLite database. The system centralizes authentication, inventory, checkout computation, receipt
+      generation, reporting, and role-based access control so that both client applications follow the same operational
+      rules.
+    </p>
+    <p>
+      This report documents the architecture and integration strategy of the Charlie PC system. It explains how the web
+      and mobile interfaces communicate with the backend through REST-style JSON endpoints, how JWT-based authentication
+      supports customers, cashiers, and administrators, and how backend validation protects stock accuracy, pricing,
+      payment rules, and receipt records. The report also presents the actual implemented modules, including realistic
+      checkout flows, Philippine customer-data validation, delivery address selection, and responsive mobile layouts.
+    </p>
+    <p>
+      Findings from the implemented system show that a layered client-server architecture is appropriate for a small
+      retail environment that requires synchronized data across multiple interfaces. The chosen design provides a
+      practical academic demonstration of web and mobile integration while remaining extensible for future improvements
+      such as live payment-gateway integration, wider address datasets, and stronger deployment-scale infrastructure.
+    </p>
+    <p><strong>Keywords:</strong> system integration, retail system, point-of-sale, mobile application, web application, REST API, architecture</p>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Table of Contents</h1>
+    <ul class="toc-list">
+      <li>Title Page ............................................................................................................. i</li>
+      <li>Approval Sheet ..................................................................................................... ii</li>
+      <li>Abstract ............................................................................................................... iii</li>
+      <li>List of Figures ..................................................................................................... iv</li>
+      <li>Chapter I. Project Overview ................................................................................. 1</li>
+      <li>Chapter II. System Architecture ............................................................................ 4</li>
+      <li>Chapter III. System Integration and Design ........................................................... 8</li>
+      <li>Chapter IV. Summary, Conclusion, and Recommendations .................................. 13</li>
+      <li>Appendix A. Implementation Alignment .............................................................. 15</li>
+      <li>References .......................................................................................................... 17</li>
+    </ul>
+
+    <h1 style="margin-top: 24pt;">List of Figures</h1>
+    <ul class="lof-list">
+      <li>Figure 1. Charlie PC Web Customer Storefront .................................................... 6</li>
+      <li>Figure 2. Charlie PC Web Admin Dashboard ....................................................... 7</li>
+      <li>Figure 3. Charlie PC Mobile Sign-In Screen ........................................................ 12</li>
+    </ul>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Chapter I. Project Overview</h1>
+
+    <h2>I. Background of the Study</h2>
+    <p>
+      Charlie PC is an integrated retail system designed for a computer parts and accessories shop that serves three main
+      user groups: customers, cashiers, and administrators. The project was developed as a shared platform with one
+      backend service and two client applications: a web application for customer ordering, cashier point-of-sale, and
+      admin management, and a mobile application for customer shopping, cashier counter operations, and admin management.
+    </p>
+    <p>
+      The practical need behind the system is common in small and medium retail stores. Many stores still separate
+      customer ordering, cashier checkout, stock monitoring, and sales reporting into disconnected tools or manual
+      records. This causes duplicated product encoding, inconsistent stock levels, and delayed reporting. Charlie PC
+      addresses that problem by centralizing authentication, inventory, sales processing, and reporting in one backend
+      while exposing the same business rules to both web and mobile clients.
+    </p>
+    <p>
+      The system follows a layered client-server model and exposes REST-style JSON endpoints so that different clients
+      can communicate with the same server logic in a consistent way, which is aligned with network-based architectural
+      principles described by Fielding (2000).
+    </p>
+
+    <h2>II. Problem Statement</h2>
+    <ol>
+      <li>Retail operations are harder to manage when customer ordering, cashier checkout, and inventory tracking are handled in separate tools.</li>
+      <li>Product, price, and stock data become inconsistent when web and mobile interfaces do not share a single source of truth.</li>
+      <li>Manual or client-side-only checkout logic can lead to invalid totals, stock mismatches, and weak auditability.</li>
+      <li>Stores need role-based access so that customers, cashiers, and administrators see only the functions appropriate to their responsibilities.</li>
+      <li>Small stores need a practical solution that supports web and mobile access without requiring a complex enterprise database setup.</li>
+    </ol>
+
+    <h2>III. Objectives</h2>
+    <h3>General Objective</h3>
+    <p>
+      To design and implement an integrated Charlie PC system that connects web and mobile applications to a shared
+      backend for authentication, product management, checkout, sales recording, and reporting.
+    </p>
+
+    <h3>Specific Objectives</h3>
+    <ol>
+      <li>To provide a web application that supports customer browsing, online ordering, cashier POS operations, and admin product and sales management.</li>
+      <li>To provide a mobile application that supports customer shopping, cashier counter operations, and admin dashboards, product management, and sales monitoring.</li>
+      <li>To centralize authentication using token-based login so that both web and mobile clients use the same account and authorization rules.</li>
+      <li>To centralize inventory and checkout rules so that sale totals, stock deductions, receipts, and validation are computed on the server.</li>
+      <li>To maintain one consistent database for users, products, sales, and sale items.</li>
+      <li>To support realistic checkout features such as receipts, delivery and pickup selection, PH customer-data validation, and multiple payment methods including Cash, Card, GCash, and Cash on Delivery.</li>
+      <li>To keep the mobile application usable across narrow phones, tablets, and foldable-width layouts through responsive screen composition.</li>
+    </ol>
+
+    <h2>IV. Scope and Limitations</h2>
+    <h3>Scope</h3>
+    <ul>
+      <li>Customer registration and login</li>
+      <li>Role-based login for customer, cashier, and admin</li>
+      <li>Product listing, search, and category browsing</li>
+      <li>Add-to-cart and customer checkout on web and mobile</li>
+      <li>Cashier POS checkout with quick cash tendering, payment confirmation, and receipt output</li>
+      <li>Admin product management and sales monitoring on web and mobile</li>
+      <li>Sales reporting through dashboard metrics</li>
+      <li>PH phone, email, and delivery address validation with inline required-field feedback on web and mobile</li>
+      <li>Receipt generation and inventory deduction</li>
+      <li>Responsive mobile layouts that adapt for small phones, larger phones, tablets, and foldable-width screens</li>
+      <li>Shared backend integration for both web and mobile clients</li>
+    </ul>
+
+    <h3>Limitations</h3>
+    <ul>
+      <li>The backend uses SQLite, which is practical for a school project or small deployment, but is not intended for large multi-branch concurrency.</li>
+      <li>Card and GCash flows are realistic UI and validation flows, but they are not yet connected to a live payment gateway or webhook-based payment confirmation.</li>
+      <li>The Philippine address dataset is currently a curated starter dataset, not a complete nationwide PSGC-integrated source.</li>
+      <li>The mobile cart is stateful during app use but does not yet implement advanced offline sync.</li>
+      <li>The application includes validation and UI safeguards, but it does not yet use a full automated CI pipeline for every build target.</li>
+      <li>The system currently runs as a centralized single backend service and is not yet deployed as distributed microservices.</li>
+    </ul>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Chapter II. System Architecture</h1>
+
+    <h2>I. Architectural Style</h2>
+    <p>
+      The Charlie PC system uses a hybrid client-server, layered three-tier, REST API-based architecture. The web and
+      mobile applications act as the presentation layer. The Express backend provides the application and service layer,
+      while SQLite and reference datasets act as the data layer. This architectural choice allows both clients to rely on
+      one source of truth for authentication, products, checkout, receipts, and reporting.
+    </p>
+
+    <div class="table-title">Table 1. Charlie PC Architecture Layers</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Main Components</th>
+          <th>Implemented Responsibility</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Presentation Layer</td>
+          <td>React + Vite web client; Expo + React Native mobile client</td>
+          <td>Customer storefront, cashier counter flow, admin dashboard, role-based navigation, and form interaction</td>
+        </tr>
+        <tr>
+          <td>Application / Service Layer</td>
+          <td>Express REST API, JWT authentication, role middleware, product service, sales service, reports service, reference-data service</td>
+          <td>Centralized request handling, validation, checkout computation, receipt generation, and reporting</td>
+        </tr>
+        <tr>
+          <td>Data Layer</td>
+          <td>SQLite database, PH address reference data, automatic backups</td>
+          <td>Persistent storage for users, products, sales, sale items, and structured delivery metadata</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>II. Operational Flow</h2>
+    <p>
+      The implemented system follows one common transaction flow even though users interact through different roles and
+      interfaces. Customers browse products and may continue to cart and checkout only when authenticated as customers.
+      Cashiers process over-the-counter transactions through the POS interface, while administrators monitor the system,
+      manage products, and review sales records. In each case, the clients submit requests to the backend, the backend
+      validates identity and business rules, and the resulting records are written to the shared database.
+    </p>
+    <ol>
+      <li>The user opens Charlie PC using the web application or the mobile application.</li>
+      <li>The user authenticates based on the appropriate role: customer, cashier, or administrator.</li>
+      <li>The client collects the necessary product, payment, and fulfillment details.</li>
+      <li>The backend validates the token, role, stock levels, payment rules, customer details, and checkout totals.</li>
+      <li>If validation succeeds, the backend stores the sale, inserts line items, deducts stock, and generates a receipt number.</li>
+      <li>If validation fails, the backend returns structured error feedback to the client.</li>
+    </ol>
+
+    <h2>III. Actual User Interface Figures</h2>
+    <p>
+      The following figures present selected screenshots of the implemented Charlie PC system. These figures were captured
+      from the current web application and the mobile application interface build used by the project.
+    </p>
+
+    <div class="figure">
+      <img src="file:///Users/celmargalindez/GABRIEL%20DOMINGO/pos_system/docs/figures/web-customer-storefront.png" alt="Charlie PC Web Customer Storefront" />
+      <div class="caption"><strong>Figure 1.</strong> Charlie PC web customer storefront showing the public shopping interface and product discovery area.</div>
+    </div>
+
+    <div class="figure">
+      <img src="file:///Users/celmargalindez/GABRIEL%20DOMINGO/pos_system/docs/figures/web-admin-dashboard.png" alt="Charlie PC Web Admin Dashboard" />
+      <div class="caption"><strong>Figure 2.</strong> Charlie PC web admin dashboard showing operational metrics, revenue visibility, and administrative controls.</div>
+    </div>
+
+    <div class="figure">
+      <img src="file:///Users/celmargalindez/GABRIEL%20DOMINGO/pos_system/docs/figures/mobile-login-screen.png" alt="Charlie PC Mobile Sign-In Screen" style="max-width: 52%;" />
+      <div class="caption"><strong>Figure 3.</strong> Charlie PC mobile sign-in screen showing the role-aware mobile entry point for customer, cashier, and admin users.</div>
+    </div>
+
+    <h2>IV. Data Model Summary</h2>
+    <div class="table-title">Table 2. Core Operational Data Entities</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Entity</th>
+          <th>Selected Attributes</th>
+          <th>Purpose in the Implemented System</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Users</td>
+          <td>ID, name, email, password, role</td>
+          <td>Stores role-based accounts for customers, cashiers, and administrators</td>
+        </tr>
+        <tr>
+          <td>Products</td>
+          <td>ID, name, category, price, stock, barcode, image</td>
+          <td>Stores the inventory catalog used by web and mobile clients</td>
+        </tr>
+        <tr>
+          <td>Sales</td>
+          <td>ID, total, subtotal, receipt number, payment method, fulfillment type, status, customer details</td>
+          <td>Stores receipt-level transaction details, payment metadata, fulfillment metadata, and audit status</td>
+        </tr>
+        <tr>
+          <td>Sale Items</td>
+          <td>ID, sale ID, product ID, product name snapshot, quantity, price, line total</td>
+          <td>Stores the normalized line items associated with each sale and preserves receipt snapshots</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Chapter III. System Integration and Design</h1>
+
+    <h2>I. Integration Strategy</h2>
+    <p>
+      The Charlie PC system integrates the web and mobile applications through a shared backend API and token-based
+      authentication. Both clients consume the same backend endpoints, including <code>/api/login</code>,
+      <code>/api/register</code>, <code>/products</code>, <code>/sales</code>, <code>/reports/dashboard</code>, and
+      <code>/reference/ph-addresses</code>. This design allows the user interface to vary by platform while the system
+      behavior remains consistent.
+    </p>
+    <p>
+      After login, the backend returns a JWT containing the authenticated user ID and role. The web client stores the
+      token in local storage, while the mobile client persists it through AsyncStorage. Protected requests send the token
+      back in the <code>Authorization</code> header, allowing the backend to enforce access rules for customer checkout,
+      cashier POS operations, and admin-level management tasks.
+    </p>
+
+    <h2>II. Shared Business Rules</h2>
+    <ul>
+      <li>Customer online checkout is allowed only for authenticated customer accounts.</li>
+      <li>POS checkout is allowed only for authenticated cashier or administrator accounts.</li>
+      <li>Product creation is limited to authenticated admin or cashier users, while update and delete actions remain admin-only.</li>
+      <li>Totals, discounts, tax, stock checks, receipt numbers, and sale items are computed server-side.</li>
+      <li>Philippine email and phone validation are enforced before checkout data is accepted.</li>
+      <li>Delivery checkout requires a structured address, and Cash on Delivery is limited to delivery orders.</li>
+      <li>GCash requires a payment reference, while card payments preserve only masked last-four metadata.</li>
+      <li>Voiding restocks items and marks the sale as <code>voided</code> instead of deleting the transaction record.</li>
+    </ul>
+
+    <h2>III. Validation and Reference Data Flow</h2>
+    <p>
+      Validation is handled in both the client and the backend so that the interface can guide users while the server
+      remains the final source of truth. The web and mobile checkout forms mark required fields, validate missing data,
+      and restrict invalid combinations such as Cash on Delivery for pickup orders. The backend re-validates submitted
+      values before accepting the transaction.
+    </p>
+    <p>
+      Delivery addresses follow a structured Philippine address flow consisting of Region, Province, Municipality or
+      City, Barangay, and Postal Code. The user then adds street, building, or landmark details before the final address
+      is composed and stored with the sale.
+    </p>
+
+    <h2>IV. Database Integration</h2>
+    <p>
+      SQLite was selected as the operational database because it is lightweight, zero-configuration, ACID-compliant, and
+      practical for a capstone or small single-store deployment. The backend initializes and migrates the schema on
+      startup, and the applications never connect to the database directly. Sales are created inside a transaction so
+      that line-item insertion, stock deduction, and receipt creation happen atomically. The system also creates
+      timestamped SQLite backups during startup to strengthen data protection for demonstration and development use.
+    </p>
+
+    <h2>V. Technology Stack</h2>
+    <div class="table-title">Table 3. Major Technologies Used in Charlie PC</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>System Part</th>
+          <th>Technology</th>
+          <th>Role in the Project</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Web Application</td>
+          <td>React, Vite, Fetch API, custom Material-inspired styling</td>
+          <td>Browser-based storefront, cashier POS, and admin management interface</td>
+        </tr>
+        <tr>
+          <td>Mobile Application</td>
+          <td>Expo SDK 54, React Native, React Navigation, React Native Paper, AsyncStorage</td>
+          <td>Cross-platform role-based mobile interface with responsive layouts and Material Design 3-style components</td>
+        </tr>
+        <tr>
+          <td>Backend</td>
+          <td>Node.js, Express, jsonwebtoken, bcrypt, SQLite</td>
+          <td>Authentication, authorization, product CRUD, checkout processing, reporting, and reference-data handling</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Chapter IV. Summary, Conclusion, and Recommendations</h1>
+
+    <h2>I. Summary</h2>
+    <p>
+      The Charlie PC project successfully integrates a web application and a mobile application using one shared backend
+      and one shared database. The system supports customer shopping, cashier POS operations, and admin management
+      through a consistent role-based model. The architecture is best described as a layered client-server system with
+      REST-style API communication. This design allows the project to reuse backend logic across both clients, keep
+      critical business rules centralized, and maintain a consistent user experience across browser-based and mobile
+      interfaces.
+    </p>
+
+    <h2>II. Conclusion</h2>
+    <p>
+      Based on the implemented structure of the project, the chosen architecture is appropriate for the Charlie PC system
+      requirements. Both clients use the same API, authentication is centralized using JWT, inventory and checkout rules
+      are computed on the backend, and product, sales, and reporting data remain synchronized across platforms.
+      Therefore, the project demonstrates a practical implementation of web-mobile integration for a retail environment
+      and is suitable for academic presentation, prototype deployment, and small store operations.
+    </p>
+
+    <h2>III. Recommendations</h2>
+    <ol>
+      <li>Integrate a real payment gateway for card and GCash processing.</li>
+      <li>Replace the curated address dataset with a complete and authoritative Philippine administrative dataset.</li>
+      <li>Add refresh-token or session-hardening support for stronger authentication lifecycle management.</li>
+      <li>Add persistent cart synchronization across sessions and devices.</li>
+      <li>Introduce automated CI validation that runs web build checks, mobile guard checks, and backend tests together.</li>
+      <li>Migrate to a server-grade database if the project is expanded into a multi-branch deployment.</li>
+      <li>Add barcode scanning, supplier modules, and purchase-order management for a more complete retail workflow.</li>
+    </ol>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>Appendix A. Implementation Alignment</h1>
+    <p>
+      The following files represent the major implementation points discussed in this report and demonstrate how the
+      documented architecture maps to the actual Charlie PC codebase.
+    </p>
+    <ul class="appendix-list">
+      <li><code>frontend/src/App.jsx</code> - web entry and role flow</li>
+      <li><code>frontend/src/components/CustomerApp.jsx</code> - web customer storefront and customer checkout</li>
+      <li><code>frontend/src/components/POS.jsx</code> - web cashier POS and payment flow</li>
+      <li><code>frontend/src/components/Dashboard.jsx</code>, <code>frontend/src/components/ProductsPage.jsx</code>, <code>frontend/src/components/SalesPage.jsx</code> - web admin interface</li>
+      <li><code>frontend/src/constants/authRoles.js</code> - shared web auth role definitions</li>
+      <li><code>mobile/App.js</code> - mobile app root</li>
+      <li><code>mobile/src/navigation/AppNavigator.js</code> - role-based mobile navigation</li>
+      <li><code>mobile/src/screens/LoginScreen.js</code> - mobile sign-in interface</li>
+      <li><code>mobile/src/screens/CartScreen.js</code> - mobile checkout and cashier payment flow</li>
+      <li><code>mobile/src/screens/ProductsScreen.js</code> - mobile shop screen</li>
+      <li><code>mobile/src/screens/AdminDashboardScreen.js</code>, <code>mobile/src/screens/AdminProductsScreen.js</code>, <code>mobile/src/screens/AdminSalesScreen.js</code> - mobile admin modules</li>
+      <li><code>mobile/src/styles/authStyles.js</code> and <code>mobile/src/styles/screenShell.js</code> - shared mobile visual system</li>
+      <li><code>mobile/scripts/check-paper-actions.js</code> - mobile UI guard script</li>
+      <li><code>backend/server.js</code> - backend API startup and middleware</li>
+      <li><code>backend/routes/authRoutes.js</code>, <code>backend/routes/productRoutes.js</code>, <code>backend/routes/saleRoutes.js</code>, <code>backend/routes/reportRoutes.js</code>, <code>backend/routes/referenceRoutes.js</code> - backend route modules</li>
+      <li><code>backend/middleware/authMiddleware.js</code> - role-protection middleware</li>
+      <li><code>backend/models/saleModel.js</code> - sale validation, receipt generation, and voiding logic</li>
+      <li><code>backend/config/database.js</code> - schema initialization, seed defaults, and backups</li>
+    </ul>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h1>References</h1>
+    <p>Expo. (n.d.). <em>Expo documentation</em>. Retrieved March 16, 2026, from https://docs.expo.dev/</p>
+    <p>Express.js. (n.d.). <em>Express routing</em>. Retrieved March 16, 2026, from https://expressjs.com/en/guide/routing.html</p>
+    <p>Fielding, R. T. (2000). <em>Architectural styles and the design of network-based software architectures</em> (Doctoral dissertation, University of California, Irvine). https://roy.gbiv.com/pubs/dissertation/top.htm</p>
+    <p>Jones, M., Bradley, J., &amp; Sakimura, N. (2015, May). <em>RFC 7519: JSON Web Token (JWT)</em>. RFC Editor. https://www.rfc-editor.org/rfc/rfc7519</p>
+    <p>React. (n.d.). <em>React</em>. Retrieved March 16, 2026, from https://react.dev/</p>
+    <p>React Navigation. (n.d.). <em>NavigationContainer</em>. Retrieved March 16, 2026, from https://reactnavigation.org/docs/navigation-container/</p>
+    <p>React Native. (2024, October 15). <em>Architecture overview</em>. https://reactnative.dev/architecture/overview</p>
+    <p>SQLite. (2025, November 13). <em>Features of SQLite</em>. https://www.sqlite.org/features.html</p>
+    <p>Vite. (n.d.). <em>Getting started</em>. Retrieved March 16, 2026, from https://vite.dev/guide/</p>
+  </section>
+</body>
+</html>
