@@ -54,6 +54,22 @@ export function register(payload) {
   return request('/api/register', { method: 'POST', body: payload });
 }
 
+export function requestPasswordReset(payload) {
+  return request('/api/forgot-password/request', { method: 'POST', body: payload });
+}
+
+export function resetPassword(payload) {
+  return request('/api/forgot-password/reset', { method: 'POST', body: payload });
+}
+
+export function getStaffUsers(token) {
+  return request('/api/users/staff', { token });
+}
+
+export function createStaffUser(token, payload) {
+  return request('/api/users/staff', { method: 'POST', token, body: payload });
+}
+
 export function getProducts(query = '') {
   if (!query.trim()) return request('/products');
   return request(`/products/search?q=${encodeURIComponent(query.trim())}`);

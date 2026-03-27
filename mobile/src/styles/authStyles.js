@@ -198,6 +198,13 @@ export const authStyles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#FFFFFF'
   },
+  inlineNote: {
+    marginTop: -4,
+    marginBottom: 12,
+    color: '#475467',
+    lineHeight: 18,
+    fontSize: 12
+  },
   helperChips: {
     marginBottom: 4,
     flexDirection: 'row',
@@ -226,6 +233,41 @@ export const authStyles = StyleSheet.create({
     color: '#475467',
     lineHeight: 20
   },
+  forgotPanel: {
+    marginTop: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(11,94,215,0.12)',
+    backgroundColor: '#F7FAFF',
+  },
+  forgotTitle: {
+    color: '#101828',
+    fontWeight: '700',
+    marginBottom: 4
+  },
+  forgotCopy: {
+    color: '#475467',
+    lineHeight: 20,
+    marginBottom: 12
+  },
+  inlineActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 12
+  },
+  successText: {
+    color: '#087443',
+    lineHeight: 18,
+    marginBottom: 10
+  },
+  errorText: {
+    color: '#B42318',
+    lineHeight: 18,
+    marginBottom: 10
+  },
   button: {
     marginTop: 10
   },
@@ -235,7 +277,15 @@ export const authStyles = StyleSheet.create({
   footer: {
     marginTop: 8,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    gap: 4
+  },
+  staffProvisionText: {
+    color: '#475467',
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 6
   }
 });

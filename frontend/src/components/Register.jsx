@@ -12,9 +12,7 @@ export default function Register({ onRegister, onNavigate }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [role, setRole] = useState('customer');
-
-  const selectedRole = authRoleOptions.find((option) => option.value === role) || authRoleOptions[0];
+  const selectedRole = authRoleOptions.find((option) => option.value === 'customer') || authRoleOptions[0];
 
   async function submit(e) {
     e.preventDefault();
@@ -28,8 +26,8 @@ export default function Register({ onRegister, onNavigate }) {
       setEmailError('Please enter a valid email');
       return;
     }
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     if (password !== confirm) {
@@ -42,7 +40,7 @@ export default function Register({ onRegister, onNavigate }) {
       const res = await fetch(`${API}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: normalizeEmail(email), password, role })
+        body: JSON.stringify({ name: name.trim(), email: normalizeEmail(email), password, role: 'customer' })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Register failed');
@@ -61,26 +59,26 @@ export default function Register({ onRegister, onNavigate }) {
           <div className="login-showcase-panel register-showcase-panel">
             <div>
               <div className="login-kicker">Charlie PC Account Setup</div>
-              <h1 className="login-showcase-title register-showcase-title">Create one account and open the right workspace immediately.</h1>
+              <h1 className="login-showcase-title register-showcase-title">Create your customer account and start shopping immediately.</h1>
               <p className="login-showcase-copy register-showcase-copy">
-                Register once for shopping, counter operations, or store management. The same Charlie PC account styling now carries across web and mobile for a cleaner experience.
+                Customer self-registration stays simple and safe. Staff access is issued internally, while shoppers can create an account here and use the same clean Charlie PC flow on web or mobile.
               </p>
 
               <div className="login-showcase-tags">
                 <span>Web and Mobile Ready</span>
-                <span>Role-Based Access</span>
-                <span>Storefront to POS</span>
+                <span>Customer Checkout</span>
+                <span>Safer Account Setup</span>
               </div>
             </div>
 
             <div className="register-support-grid">
               <div className="login-highlight-card register-support-card">
-                <div className="login-highlight-label">Setup Flow</div>
-                <strong>Pick the role first, then fill in the account details that match that workspace.</strong>
+                <div className="login-highlight-label">Customer Signup</div>
+                <strong>Create your shopping account here, then sign in on either web or mobile with the same credentials.</strong>
               </div>
               <div className="login-highlight-card register-support-card">
-                <div className="login-highlight-label">Consistent Access</div>
-                <strong>Use the same Charlie PC identity on the customer storefront, cashier terminal, and admin tools.</strong>
+                <div className="login-highlight-label">Staff Access</div>
+                <strong>Admin and cashier accounts are created internally and protected with an extra security code at login.</strong>
               </div>
             </div>
           </div>
@@ -93,30 +91,14 @@ export default function Register({ onRegister, onNavigate }) {
             <div className="auth-logo login-logo">CP</div>
             <div>
               <h3 className="auth-title">Create your Charlie PC account</h3>
-              <div className="auth-sub">Use the same portal style as login and choose the access type before saving the account.</div>
+              <div className="auth-sub">Customer self-registration is available here. Staff access is provisioned internally for security.</div>
             </div>
           </div>
 
           <div className="login-role-banner register-role-banner">
-            <div className="login-role-banner-label">Creating access for</div>
+            <div className="login-role-banner-label">Registering as</div>
             <strong>{selectedRole.label}</strong>
             <span>{selectedRole.setup}</span>
-          </div>
-
-          <div className="login-role-grid register-role-grid" aria-label="registration role selection">
-            {authRoleOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`login-role-card ${role === option.value ? 'active' : ''}`}
-                onClick={() => setRole(option.value)}
-                aria-pressed={role === option.value}
-              >
-                <span className="login-role-card-title">{option.label}</span>
-                <span className="login-role-card-copy">{option.copy}</span>
-                <span className="login-role-card-meta">{option.meta}</span>
-              </button>
-            ))}
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
@@ -149,8 +131,9 @@ export default function Register({ onRegister, onNavigate }) {
             </div>
 
             <div className="auth-helper-chips" aria-label="registration helper notes">
-              <span>Minimum 6-character password</span>
+              <span>Minimum 8-character password</span>
               <span>{selectedRole.meta}</span>
+              <span>Staff accounts are issued internally</span>
               <span>Ready for web and mobile</span>
             </div>
 
@@ -191,7 +174,7 @@ export default function Register({ onRegister, onNavigate }) {
             </div>
 
             <div className="muted register-role-note">
-              This account will open the {selectedRole.label.toLowerCase()} workspace after sign-in and keep the same Charlie PC styling across screens.
+              This account opens the customer storefront after sign-in. For cashier or admin access, ask the store administrator to issue a staff account.
             </div>
 
             <div className="auth-actions">

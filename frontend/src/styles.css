@@ -1746,6 +1746,51 @@ input[type='radio']:focus {
   font-size: 0.84rem;
 }
 
+.auth-inline-note {
+  margin-top: -0.1rem;
+  font-size: 0.79rem;
+  line-height: 1.45;
+}
+
+.auth-forgot-panel {
+  margin-top: 0.35rem;
+  padding: 0.95rem;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 90, 193, 0.12);
+  background: linear-gradient(180deg, rgba(238, 245, 255, 0.9), rgba(255, 255, 255, 0.96));
+  display: grid;
+  gap: 0.48rem;
+}
+
+.auth-forgot-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--md-on-surface);
+}
+
+.auth-forgot-copy {
+  color: var(--md-on-surface-variant);
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+
+.auth-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.12rem;
+}
+
+.auth-inline-actions button {
+  min-width: 152px;
+}
+
+.auth-inline-message {
+  margin-top: 0.08rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .show-pass {
   position: absolute;
   right: 6px;

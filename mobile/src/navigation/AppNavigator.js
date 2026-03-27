@@ -16,6 +16,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import AdminProductsScreen from '../screens/AdminProductsScreen';
 import AdminSalesScreen from '../screens/AdminSalesScreen';
+import AdminStaffScreen from '../screens/AdminStaffScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,6 +49,8 @@ function getTabScreenOptions(labelPosition) {
           ? 'package-variant-closed'
           : route.name === 'Sales'
             ? 'chart-line'
+            : route.name === 'Staff'
+              ? 'account-multiple-outline'
             : route.name === 'Shop'
               ? 'shopping-outline'
               : route.name === 'Cart'
@@ -98,6 +101,7 @@ function AdminTabs() {
       <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
       <Tab.Screen name="Products" component={AdminProductsScreen} />
       <Tab.Screen name="Sales" component={AdminSalesScreen} />
+      <Tab.Screen name="Staff" component={AdminStaffScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -120,7 +124,6 @@ function CashierTabs() {
           tabBarBadge: totalItems > 0 ? formatNumber(totalItems, { maximumFractionDigits: 0 }) : undefined
         }}
       />
-      <Tab.Screen name="Products" component={AdminProductsScreen} options={{ title: 'Manage Products' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

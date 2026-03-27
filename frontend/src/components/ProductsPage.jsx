@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { API } from '../config';
+import { PRODUCT_CATEGORIES } from '../constants/productCategories';
 import { formatCurrency, formatNumber } from '../utils/format';
 import './products-admin.css';
 
@@ -12,9 +13,20 @@ const PRODUCT_IMAGE_PLACEHOLDER = `data:image/svg+xml;charset=UTF-8,${encodeURIC
   </svg>`
 )}`;
 
+const EMPTY_FORM = {
+  name: '',
+  category: '',
+  price: '',
+  stock: '',
+  barcode: '',
+  image: '',
+  imagePreview: '',
+  resetImage: false
+};
+
 export default function ProductsPage({ auth, onLogout }) {
   const [products, setProducts] = useState([]);
-  const [form, setForm] = useState({ name: '', category: '', price: '', stock: '', barcode: '', image: '' });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [editing, setEditing] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,6 +47,7 @@ export default function ProductsPage({ auth, onLogout }) {
 
   function validate() {
     if (!form.name.trim()) return 'Name is required';
+    if (!form.category.trim()) return 'Category is required';
     if (form.price === '' || Number(form.price) < 0) return 'Price must be a positive number';
     if (form.stock === '' || Number(form.stock) < 0) return 'Stock must be a non-negative integer';
     return null;
@@ -48,12 +61,13 @@ export default function ProductsPage({ auth, onLogout }) {
     try {
       const payload = {
         name: form.name.trim(),
-        category: form.category.trim() || 'Uncategorized',
+        category: form.category.trim(),
         price: Number(form.price),
         stock: Number(form.stock),
         barcode: form.barcode.trim() || null,
-        image: form.image || null,
       };
+      if (form.image) payload.image = form.image;
+      if (editing && form.resetImage) payload.resetImage = true;
 
       const token = (auth && auth.token) || localStorage.getItem('token');
       if (!token) throw new Error('Please log in as admin or cashier');
@@ -72,7 +86,7 @@ export default function ProductsPage({ auth, onLogout }) {
         setMessage(data.error || data.message || 'Product added successfully');
       }
 
-      setForm({ name: '', category: '', price: '', stock: '', barcode: '', image: '' });
+      setForm(EMPTY_FORM);
       if (fileRef.current) fileRef.current.value = '';
       fetchProducts();
       setTimeout(() => setMessage(''), 3000);
@@ -85,7 +99,17 @@ export default function ProductsPage({ auth, onLogout }) {
 
   function startEdit(p) {
     setEditing(p.id);
-    setForm({ name: p.name || '', category: p.category || '', price: String(p.price || ''), stock: String(p.stock || ''), barcode: p.barcode || '', image: p.image || '' });
+    setForm({
+      name: p.name || '',
+      category: p.category || '',
+      price: String(p.price || ''),
+      stock: String(p.stock || ''),
+      barcode: p.barcode || '',
+      image: '',
+      imagePreview: p.image || '',
+      resetImage: false
+    });
+    if (fileRef.current) fileRef.current.value = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -108,10 +132,15 @@ export default function ProductsPage({ auth, onLogout }) {
 
   function handleFile(e) {
     const f = e.target.files && e.target.files[0];
-    if (!f) return setForm({ ...form, image: '' });
+    if (!f) return;
     const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, image: reader.result });
+    reader.onload = () => setForm((prev) => ({ ...prev, image: reader.result, imagePreview: reader.result, resetImage: false }));
     reader.readAsDataURL(f);
+  }
+
+  function resetImage() {
+    setForm((prev) => ({ ...prev, image: '', imagePreview: '', resetImage: Boolean(editing) }));
+    if (fileRef.current) fileRef.current.value = '';
   }
 
   return (
@@ -141,14 +170,39 @@ export default function ProductsPage({ auth, onLogout }) {
             <form className="form" onSubmit={handleSubmit}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontWeight: 700 }}>Product details</div>
-                <div className="advanced-toggle">
+                {/* <div className="advanced-toggle">
                   <label className="small-text">Advanced</label>
                   <input type="checkbox" checked={advanced} onChange={e => setAdvanced(e.target.checked)} />
-                </div>
+                </div> */}
               </div>
 
               <input className="input" placeholder="Product name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-              <input className="input" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
+              <div>
+                <label className="small-text" htmlFor="product-category">Category</label>
+                <select id="product-category" className="input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} required>
+                  <option value="">Select category</option>
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="small-text">Product photo</label>
+                <input ref={fileRef} className="file-input-hidden" type="file" accept="image/*" onChange={handleFile} />
+                <div className="image-picker-actions">
+                  <button className="btn ghost" type="button" onClick={() => fileRef.current?.click()}>Choose Photo</button>
+                  {(form.imagePreview || (editing && !form.resetImage)) ? (
+                    <button className="btn" type="button" onClick={resetImage}>Use Category Photo</button>
+                  ) : null}
+                </div>
+                <div className="small-text">Leave it blank and the category photo will be used.</div>
+                {form.imagePreview ? (
+                  <img className="file-preview" src={form.imagePreview} alt="preview" />
+                ) : (
+                  <div className="image-placeholder">No custom photo selected</div>
+                )}
+              </div>
 
               <div className="row">
                 <input className="input" placeholder="Price" type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required />
@@ -158,19 +212,13 @@ export default function ProductsPage({ auth, onLogout }) {
               {advanced && (
                 <>
                   <input className="input" placeholder="Barcode (optional)" value={form.barcode} onChange={e => setForm({ ...form, barcode: e.target.value })} />
-                  <div>
-                    <label className="small-text">Image (upload or paste URL)</label>
-                    <input ref={fileRef} className="input" type="file" accept="image/*" onChange={handleFile} />
-                    <input className="input" placeholder="Or image URL" value={form.image && form.image.startsWith('data:') ? '' : form.image} onChange={e => setForm({ ...form, image: e.target.value })} />
-                    {form.image && <img className="file-preview" src={form.image} alt="preview" />}
-                  </div>
                 </>
               )}
 
               <div className="btn-row">
                 <button className="btn primary" type="submit" disabled={loading}>{loading ? 'Saving...' : (editing ? 'Update Product' : 'Add Product')}</button>
-                <button className="btn ghost" type="button" onClick={() => { setForm({ name: '', category: '', price: '', stock: '', barcode: '', image: '' }); setEditing(null); if (fileRef.current) fileRef.current.value = '' }}>Clear</button>
-                {editing && <button className="btn" type="button" onClick={() => { setEditing(null); setForm({ name: '', category: '', price: '', stock: '', barcode: '', image: '' }); if (fileRef.current) fileRef.current.value = '' }}>Cancel Edit</button>}
+                <button className="btn ghost" type="button" onClick={() => { setForm(EMPTY_FORM); setEditing(null); if (fileRef.current) fileRef.current.value = ''; }}>Clear</button>
+                {editing && <button className="btn" type="button" onClick={() => { setEditing(null); setForm(EMPTY_FORM); if (fileRef.current) fileRef.current.value = ''; }}>Cancel Edit</button>}
               </div>
             </form>
           </div>

@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Card, Dialog, FAB, HelperText, Menu, Portal, Snackbar, Text, TextInput } from 'react-native-paper';
 import { addProduct, deleteProduct, getProducts, updateProduct } from '../api/client';
 import { PRODUCT_CATEGORIES } from '../constants/productCategories';
@@ -14,7 +14,6 @@ const EMPTY_FORM = {
   category: '',
   price: '',
   stock: '',
-  barcode: '',
   image: '',
   imagePreview: '',
   resetImage: false
@@ -75,7 +74,6 @@ export default function AdminProductsScreen() {
       category: product.category || '',
       price: String(product.price ?? ''),
       stock: String(product.stock ?? ''),
-      barcode: product.barcode || '',
       image: '',
       imagePreview: product.image || '',
       resetImage: false
@@ -162,8 +160,7 @@ export default function AdminProductsScreen() {
       name: form.name.trim(),
       category: form.category.trim(),
       price: Number(form.price || 0),
-      stock: Number(form.stock || 0),
-      barcode: form.barcode.trim()
+      stock: Number(form.stock || 0)
     };
 
     if (form.image) payload.image = form.image;
@@ -280,68 +277,71 @@ export default function AdminProductsScreen() {
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)} style={layout.isExpanded ? styles.dialogWide : undefined}>
           <Dialog.Title>{editing ? 'Edit Product' : 'Add Product'}</Dialog.Title>
-          <Dialog.Content>
-            <TextInput label="Name" mode="outlined" value={form.name} onChangeText={(v) => setForm((p) => ({ ...p, name: v }))} style={styles.input} />
-            <Menu
-              visible={categoryMenuVisible}
-              onDismiss={() => setCategoryMenuVisible(false)}
-              contentStyle={styles.categoryMenu}
-              anchor={(
-                <Pressable onPress={() => setCategoryMenuVisible(true)}>
-                  <View pointerEvents="none">
-                    <TextInput
-                      label="Category"
-                      mode="outlined"
-                      value={form.category}
-                      editable={false}
-                      style={styles.input}
-                      right={<TextInput.Icon icon="chevron-down" />}
+          <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: 'height' })} keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}>
+            <Dialog.ScrollArea style={[styles.dialogScrollArea, { maxHeight: Math.min(layout.height * 0.68, 520) }]}>
+              <ScrollView contentContainerStyle={styles.dialogScrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <TextInput label="Name" mode="outlined" value={form.name} onChangeText={(v) => setForm((p) => ({ ...p, name: v }))} style={styles.input} />
+                <Menu
+                  visible={categoryMenuVisible}
+                  onDismiss={() => setCategoryMenuVisible(false)}
+                  contentStyle={styles.categoryMenu}
+                  anchor={(
+                    <Pressable onPress={() => setCategoryMenuVisible(true)}>
+                      <View pointerEvents="none">
+                        <TextInput
+                          label="Category"
+                          mode="outlined"
+                          value={form.category}
+                          editable={false}
+                          style={styles.input}
+                          right={<TextInput.Icon icon="chevron-down" />}
+                        />
+                      </View>
+                    </Pressable>
+                  )}
+                >
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <Menu.Item
+                      key={category}
+                      title={category}
+                      onPress={() => {
+                        setForm((p) => ({ ...p, category }));
+                        setCategoryMenuVisible(false);
+                      }}
                     />
+                  ))}
+                </Menu>
+                <HelperText type="info" visible style={styles.formHelper}>
+                  Add a custom product photo, or leave it blank and we will use the category image.
+                </HelperText>
+                <View style={styles.imagePanel}>
+                  {form.imagePreview ? (
+                    <Image source={{ uri: form.imagePreview }} style={styles.imagePreview} />
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <Text style={styles.imagePlaceholderTitle}>No custom photo selected</Text>
+                      <Text style={styles.imagePlaceholderCopy}>The selected category photo will be used after saving.</Text>
+                    </View>
+                  )}
+                  <View style={styles.imageActions}>
+                    <Button mode="contained-tonal" icon="image" onPress={() => selectProductImage('library')} style={styles.imageActionButton}>
+                      Choose Photo
+                    </Button>
+                    <Button mode="outlined" icon="camera" onPress={() => selectProductImage('camera')} style={styles.imageActionButton}>
+                      Take Photo
+                    </Button>
                   </View>
-                </Pressable>
-              )}
-            >
-              {PRODUCT_CATEGORIES.map((category) => (
-                <Menu.Item
-                  key={category}
-                  title={category}
-                  onPress={() => {
-                    setForm((p) => ({ ...p, category }));
-                    setCategoryMenuVisible(false);
-                  }}
-                />
-              ))}
-            </Menu>
-            <HelperText type="info" visible style={styles.formHelper}>
-              Add a custom product photo, or leave it blank and we will use the category image.
-            </HelperText>
-            <View style={styles.imagePanel}>
-              {form.imagePreview ? (
-                <Image source={{ uri: form.imagePreview }} style={styles.imagePreview} />
-              ) : (
-                <View style={styles.imagePlaceholder}>
-                  <Text style={styles.imagePlaceholderTitle}>No custom photo selected</Text>
-                  <Text style={styles.imagePlaceholderCopy}>The selected category photo will be used after saving.</Text>
+                  {form.imagePreview || (editing && !form.resetImage) ? (
+                    <Button mode="text" textColor="#2457A6" onPress={resetProductImage} compact>
+                      Use Category Photo
+                    </Button>
+                  ) : null}
                 </View>
-              )}
-              <View style={styles.imageActions}>
-                <Button mode="contained-tonal" icon="image" onPress={() => selectProductImage('library')} style={styles.imageActionButton}>
-                  Choose Photo
-                </Button>
-                <Button mode="outlined" icon="camera" onPress={() => selectProductImage('camera')} style={styles.imageActionButton}>
-                  Take Photo
-                </Button>
-              </View>
-              {form.imagePreview || (editing && !form.resetImage) ? (
-                <Button mode="text" textColor="#2457A6" onPress={resetProductImage} compact>
-                  Use Category Photo
-                </Button>
-              ) : null}
-            </View>
-            <TextInput label="Price" mode="outlined" keyboardType="decimal-pad" value={form.price} onChangeText={(v) => setForm((p) => ({ ...p, price: v }))} style={styles.input} />
-            <TextInput label="Stock" mode="outlined" keyboardType="number-pad" value={form.stock} onChangeText={(v) => setForm((p) => ({ ...p, stock: v }))} style={styles.input} />
-            <TextInput label="Barcode" mode="outlined" value={form.barcode} onChangeText={(v) => setForm((p) => ({ ...p, barcode: v }))} style={styles.input} />
-          </Dialog.Content>
+                <TextInput label="Price" mode="outlined" keyboardType="decimal-pad" value={form.price} onChangeText={(v) => setForm((p) => ({ ...p, price: v }))} style={styles.input} />
+                <TextInput label="Stock" mode="outlined" keyboardType="number-pad" value={form.stock} onChangeText={(v) => setForm((p) => ({ ...p, stock: v }))} style={styles.input} />
+              </ScrollView>
+            </Dialog.ScrollArea>
+          </KeyboardAvoidingView>
           <Dialog.Actions>
             <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
             <Button onPress={save}>Save</Button>
@@ -422,6 +422,14 @@ const styles = StyleSheet.create({
   },
   deleteButtonContent: {
     minWidth: 92
+  },
+  dialogScrollArea: {
+    borderTopWidth: 0,
+    borderBottomWidth: 0
+  },
+  dialogScrollContent: {
+    paddingHorizontal: 24,
+    paddingVertical: 8
   },
   fab: {
     position: 'absolute',

@@ -10,14 +10,14 @@ export const authRoleOptions = [
     value: 'cashier',
     label: 'Cashier',
     copy: 'Handle counter sales, process payments, and support walk-in customers quickly.',
-    meta: 'Counter sales access',
-    setup: 'Create a cashier account for fast in-store checkout and product handling at the counter.'
+    meta: 'Counter sales access + security code',
+    setup: 'Cashier accounts are issued internally. Sign in with the assigned password and cashier security code.'
   },
   {
     value: 'admin',
     label: 'Admin',
     copy: 'Manage products, monitor stock, review sales, and oversee Charlie PC operations.',
-    meta: 'Management access',
-    setup: 'Create an admin account to access dashboard metrics, product management, and sales records.'
+    meta: 'Management access + security code',
+    setup: 'Admin accounts are issued internally. Sign in with the assigned password and admin security code.'
   }
 ];

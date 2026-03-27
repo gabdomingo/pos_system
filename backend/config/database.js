@@ -85,7 +85,10 @@ export async function initDB() {
       name TEXT,
       email TEXT UNIQUE,
       password TEXT,
-      role TEXT
+      role TEXT,
+      password_reset_code_hash TEXT,
+      password_reset_expires_at TEXT,
+      password_reset_requested_at TEXT
     );
   `);
 
@@ -127,6 +130,9 @@ export async function initDB() {
 
     await ensureColumn('sale_items', 'product_name', 'TEXT');
     await ensureColumn('sale_items', 'line_total', 'REAL DEFAULT 0');
+    await ensureColumn('users', 'password_reset_code_hash', 'TEXT');
+    await ensureColumn('users', 'password_reset_expires_at', 'TEXT');
+    await ensureColumn('users', 'password_reset_requested_at', 'TEXT');
 
     await db.run(`UPDATE sales SET subtotal = COALESCE(subtotal, total, 0) WHERE subtotal IS NULL`);
     await db.run(`UPDATE sales SET discount_value = COALESCE(discount_value, 0) WHERE discount_value IS NULL`);

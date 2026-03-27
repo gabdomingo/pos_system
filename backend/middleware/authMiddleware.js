@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getUserById } from '../models/userModel.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me-before-production';
 
 export async function requireAuth(req, res, next) {
   try {

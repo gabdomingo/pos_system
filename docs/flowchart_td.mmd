@@ -1,38 +1,45 @@
 flowchart TD
     A([Start]) --> B["Open Charlie PC on Web or Mobile"]
-    B --> C{"User Role?"}
+    B --> C{"Logged in?"}
 
-    C -->|Customer| D["Browse Products"]
-    C -->|Cashier| E["Login as Cashier"]
-    C -->|Admin| F["Login as Admin"]
+    C -->|No| D["Open Login or Register Screen"]
+    D --> E["Submit credentials to /api/login or /api/register"]
+    E --> F{"Role returned by backend"}
 
-    D --> G{"Add to Cart / Checkout?"}
-    G -->|No| D
-    G -->|Yes| H{"Logged in as Customer?"}
-    H -->|No| I["Prompt Login"]
-    I --> J["Authenticate via /api/login"]
-    J --> H
-    H -->|Yes| K["Enter Fulfillment, Payment, and Address Details"]
-    K --> L["Send Sale Request to /sales"]
+    C -->|Yes| F
 
-    E --> M["Open POS Counter Interface"]
-    M --> N["Add Products to Sale"]
-    N --> O["Enter Payment Details"]
-    O --> L
+    F -->|Customer| G["Open customer shopping flow"]
+    F -->|Cashier| H["Open cashier selling flow"]
+    F -->|Admin| I["Open admin management flow"]
 
-    F --> P["Open Admin Dashboard"]
-    P --> Q{"Task Type?"}
-    Q -->|Manage Products| R["Create / Update / Delete Product"]
-    Q -->|Review Sales| S["View Dashboard and Sales Data"]
-    R --> T["Send Request to /products"]
-    S --> U["Read /reports and /sales data"]
+    G --> G1["Browse products and search catalog"]
+    G1 --> G2["Add items to cart"]
+    G2 --> G3["Choose fulfillment and payment"]
+    G3 --> G4["Submit order to /sales"]
 
-    L --> V["Backend Validates Token, Role, Stock, Totals, Payment, and Address"]
-    V --> W{"Validation Passed?"}
-    W -->|No| X["Return Error to Client"]
-    W -->|Yes| Y["Store Sale, Store Sale Items, Deduct Stock, Generate Receipt"]
-    Y --> Z["Return Receipt / Updated Data"]
-    Z --> AA([End])
-    T --> AA
-    U --> AA
-    X --> AA
+    H --> H1["Open POS or mobile counter products"]
+    H1 --> H2["Add products to active sale"]
+    H2 --> H3["Enter payment details"]
+    H3 --> H4["Submit sale to /sales"]
+
+    I --> I1{"Admin task"}
+    I1 -->|Dashboard| I2["Read /reports/dashboard"]
+    I1 -->|Sales review| I3["Read /sales and sale details"]
+    I1 -->|Product management| I4["Create, edit, or delete via /products"]
+
+    G4 --> J["Backend validates token, stock, totals, payment, and address"]
+    H4 --> J
+    I2 --> K["Return dashboard metrics"]
+    I3 --> L["Return sales records and receipt data"]
+    I4 --> M["Validate category and product image, then save product"]
+
+    J --> N{"Validation passed?"}
+    N -->|No| O["Return error to client"]
+    N -->|Yes| P["Create sale, create sale items, deduct stock, generate receipt"]
+    P --> Q["Return receipt and updated product data"]
+
+    K --> R([End])
+    L --> R
+    M --> R
+    O --> R
+    Q --> R

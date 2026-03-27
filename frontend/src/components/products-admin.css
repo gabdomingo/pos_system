@@ -71,6 +71,10 @@
   outline: none;
 }
 
+select.input {
+  appearance: none;
+}
+
 .input:focus {
   border-color: var(--prod-primary);
   box-shadow: 0 0 0 3px rgba(0, 90, 193, 0.16);
@@ -201,12 +205,33 @@
   gap: 0.35rem;
 }
 
+.file-input-hidden {
+  display: none;
+}
+
+.image-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0.45rem;
+}
+
 .file-preview {
   width: 100%;
   max-height: 180px;
   object-fit: cover;
   border-radius: 10px;
   border: 1px solid #d7deeb;
+  margin-top: 0.45rem;
+}
+
+.image-placeholder {
+  margin-top: 0.45rem;
+  border: 1px dashed #cfd7e6;
+  border-radius: 10px;
+  padding: 0.85rem;
+  background: #f8faff;
+  color: var(--prod-muted);
 }
 
 .muted {

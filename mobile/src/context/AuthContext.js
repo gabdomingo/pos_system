@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { login, register } from '../api/client';
+import { login, register, requestPasswordReset, resetPassword } from '../api/client';
 
 const STORAGE_KEY = '@pos_mobile_auth';
 const AuthContext = createContext(null);
@@ -51,7 +51,18 @@ export function AuthProvider({ children }) {
     await AsyncStorage.removeItem(STORAGE_KEY);
   }
 
-  const value = useMemo(() => ({ token, user, hydrating, signIn, signUp, signOut }), [token, user, hydrating]);
+  async function startPasswordReset(email) {
+    return requestPasswordReset({ email });
+  }
+
+  async function completePasswordReset(payload) {
+    return resetPassword(payload);
+  }
+
+  const value = useMemo(
+    () => ({ token, user, hydrating, signIn, signUp, signOut, startPasswordReset, completePasswordReset }),
+    [token, user, hydrating]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

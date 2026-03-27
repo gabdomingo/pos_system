@@ -1,9 +1,10 @@
 flowchart LR
     Customer["External Entity:\nCustomer"]
-    Staff["External Entity:\nCashier / Admin"]
+    Cashier["External Entity:\nCashier"]
+    Admin["External Entity:\nAdmin"]
 
-    Web["Process:\nWeb Client"]
-    Mobile["Process:\nMobile Client"]
+    Web["Process:\nWeb Client\nCustomer + Cashier + Admin"]
+    Mobile["Process:\nMobile Client\nCustomer + Cashier + Admin"]
     Backend["Process:\nCharlie PC Backend API"]
 
     Users[("Data Store:\nUsers")]
@@ -14,8 +15,10 @@ flowchart LR
 
     Customer -->|"login, browse, cart, checkout"| Web
     Customer -->|"login, browse, cart, checkout"| Mobile
-    Staff -->|"login, POS, product updates, report requests"| Web
-    Staff -->|"login, POS, product updates, report requests"| Mobile
+    Cashier -->|"login, POS, counter products, payment"| Web
+    Cashier -->|"login, counter products, payment"| Mobile
+    Admin -->|"login, dashboard, sales, product updates"| Web
+    Admin -->|"login, dashboard, sales, product updates"| Mobile
 
     Web -->|"JSON requests"| Backend
     Mobile -->|"JSON requests"| Backend

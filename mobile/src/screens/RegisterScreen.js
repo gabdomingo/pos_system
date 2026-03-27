@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Button, Card, HelperText, Text, TextInput } from 'react-native-paper';
 import { authRoleOptions } from '../constants/authRoles';
 import { useAuth } from '../context/AuthContext';
@@ -14,11 +14,10 @@ export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [role, setRole] = useState('customer');
   const [secure, setSecure] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const selectedRole = authRoleOptions.find((option) => option.value === role) || authRoleOptions[0];
+  const selectedRole = authRoleOptions.find((option) => option.value === 'customer') || authRoleOptions[0];
 
   async function submit() {
     setError('');
@@ -34,8 +33,8 @@ export default function RegisterScreen({ navigation }) {
       setError('Please enter a valid email address.');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
     if (password !== confirm) {
@@ -45,7 +44,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await signUp({ name: name.trim(), email: normalizeEmail(email), password, role });
+      await signUp({ name: name.trim(), email: normalizeEmail(email), password, role: 'customer' });
     } catch (e) {
       setError(e.message || 'Registration failed');
     } finally {
@@ -70,10 +69,10 @@ export default function RegisterScreen({ navigation }) {
         <View style={authStyles.hero}>
           <Text style={authStyles.kicker}>Charlie PC Account Setup</Text>
           <Text variant="headlineMedium" style={authStyles.heroTitle}>
-            Create access once and use the same Charlie PC flow everywhere.
+            Create your customer account and keep checkout simple.
           </Text>
           <Text style={authStyles.heroCopy}>
-            Register for shopping, cashier operations, or admin work using the same portal style and role-based access pattern.
+            Customer self-registration stays open here. Staff access is issued internally, while shoppers can use the same Charlie PC account flow on web or mobile.
           </Text>
 
           <View style={authStyles.tagRow}>
@@ -81,21 +80,21 @@ export default function RegisterScreen({ navigation }) {
               <Text style={authStyles.tagText}>Web and Mobile</Text>
             </View>
             <View style={authStyles.tag}>
-              <Text style={authStyles.tagText}>Role-Based</Text>
+              <Text style={authStyles.tagText}>Customer Checkout</Text>
             </View>
             <View style={authStyles.tag}>
-              <Text style={authStyles.tagText}>Charlie PC Ready</Text>
+              <Text style={authStyles.tagText}>Safer Staff Access</Text>
             </View>
           </View>
 
           <View style={authStyles.showcaseGrid}>
             <View style={[authStyles.showcaseCard, layout.isTwoPane && authStyles.showcaseCardWide]}>
-              <Text style={authStyles.showcaseLabel}>Setup Flow</Text>
-              <Text style={authStyles.showcaseCopy}>Pick the workspace first, then fill in the account details that match that role.</Text>
+              <Text style={authStyles.showcaseLabel}>Customer Signup</Text>
+              <Text style={authStyles.showcaseCopy}>Create one shopping account here, then use it across Charlie PC web and mobile checkout.</Text>
             </View>
             <View style={[authStyles.showcaseCard, layout.isTwoPane && authStyles.showcaseCardWide]}>
-              <Text style={authStyles.showcaseLabel}>Consistent Design</Text>
-              <Text style={authStyles.showcaseCopy}>Register now matches login so the auth experience feels like one product.</Text>
+              <Text style={authStyles.showcaseLabel}>Staff Access</Text>
+              <Text style={authStyles.showcaseCopy}>Admin and cashier accounts are provisioned internally and require a second security code at login.</Text>
             </View>
           </View>
         </View>
@@ -104,29 +103,12 @@ export default function RegisterScreen({ navigation }) {
           <Card.Content>
             <Text style={authStyles.cardTopline}>Create Access</Text>
             <Text variant="titleLarge" style={authStyles.cardTitle}>Create your Charlie PC account</Text>
-            <Text style={authStyles.cardSubtitle}>Choose the role first, then complete the account information below.</Text>
+            <Text style={authStyles.cardSubtitle}>Customer self-registration is available here. Staff access is issued internally for security.</Text>
 
             <View style={authStyles.roleBanner}>
-              <Text style={authStyles.roleBannerLabel}>Creating access for</Text>
+              <Text style={authStyles.roleBannerLabel}>Registering as</Text>
               <Text variant="titleMedium" style={authStyles.roleBannerTitle}>{selectedRole.label}</Text>
               <Text style={authStyles.roleBannerCopy}>{selectedRole.setup}</Text>
-            </View>
-
-            <View style={authStyles.roleGrid}>
-              {authRoleOptions.map((option) => {
-                const active = option.value === role;
-                return (
-                  <Pressable
-                    key={option.value}
-                    onPress={() => setRole(option.value)}
-                    style={[authStyles.roleCard, layout.isTwoPane && authStyles.roleCardWide, active && authStyles.roleCardActive]}
-                  >
-                    <Text style={[authStyles.roleTitle, active && authStyles.roleTitleActive]}>{option.label}</Text>
-                    <Text style={authStyles.roleCopy}>{option.copy}</Text>
-                    <Text style={authStyles.roleMeta}>{option.meta}</Text>
-                  </Pressable>
-                );
-              })}
             </View>
 
             <View style={authStyles.fieldGrid}>
@@ -155,13 +137,13 @@ export default function RegisterScreen({ navigation }) {
 
             <View style={authStyles.helperChips}>
               <View style={authStyles.helperChip}>
-                <Text style={authStyles.helperChipText}>Minimum 6-character password</Text>
+                <Text style={authStyles.helperChipText}>Minimum 8-character password</Text>
               </View>
               <View style={authStyles.helperChip}>
                 <Text style={authStyles.helperChipText}>{selectedRole.meta}</Text>
               </View>
               <View style={authStyles.helperChip}>
-                <Text style={authStyles.helperChipText}>Same style on web and mobile</Text>
+                <Text style={authStyles.helperChipText}>Staff accounts are issued internally</Text>
               </View>
             </View>
 
@@ -191,7 +173,7 @@ export default function RegisterScreen({ navigation }) {
 
             <Text style={authStyles.roleHint}>Selected access: {selectedRole.label}</Text>
             <Text style={authStyles.roleHintMuted}>
-              This account will open the {selectedRole.label.toLowerCase()} workspace after sign-in with the same Charlie PC auth layout.
+              This account opens the customer storefront after sign-in. For cashier or admin access, ask the store administrator to issue a staff account.
             </Text>
 
             <HelperText type="error" visible={Boolean(error)}>{error}</HelperText>

@@ -1,22 +1,22 @@
 flowchart LR
     subgraph Presentation["Presentation Layer"]
-        Web["Web Application\nReact + Vite"]
-        Mobile["Mobile Application\nExpo + React Native"]
+        Web["Web App\nCustomer storefront\nCashier POS\nAdmin dashboard, products, sales"]
+        Mobile["Mobile App\nCustomer shop, cart, profile\nCashier counter, payment, profile\nAdmin dashboard, products, sales"]
     end
 
     subgraph Services["Application / Service Layer"]
         API["Express REST API"]
-        Auth["JWT Authentication\nand Role Middleware"]
-        Product["Product Service"]
-        Sale["Sales and Checkout Service"]
-        Report["Reporting Service"]
-        Ref["Reference Data Service"]
+        Auth["Auth Service\n/api/login, /api/register, /api/me"]
+        Product["Product Service\n/products, /products/search"]
+        Sale["Sales and Checkout Service\n/sales, /sales/:id"]
+        Report["Reporting Service\n/reports/dashboard"]
+        Ref["Reference Data Service\n/reference/ph-addresses"]
     end
 
     subgraph Data["Data Layer"]
         DB[("SQLite Database")]
-        Addr["PH Address Reference Data"]
-        Backup["Automatic Database Backup"]
+        Addr["PH Address Dataset"]
+        Backup["Database Backup"]
     end
 
     Web <--> |HTTPS + JSON| API

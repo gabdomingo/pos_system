@@ -79,9 +79,9 @@ export default function Dashboard({ auth, onLogout }) {
           <p>Welcome, {auth?.user?.name || auth?.user?.email || 'Admin'}. Monitor revenue, stock movement, and recent transactions from one control room.</p>
         </div>
         <div className="pos-header-actions">
-          {auth && auth.user && auth.user.role === 'admin' && (
+          {/* {auth && auth.user && auth.user.role === 'admin' && (
             <button type="button" className="secondary" onClick={() => setShowAdd(true)}>Add Product</button>
-          )}
+          )} */}
           {onLogout ? <button type="button" className="btn-ghost" onClick={onLogout}>Logout</button> : null}
         </div>
       </div>
