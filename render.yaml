@@ -3,7 +3,7 @@ services:
     name: charlie-pc-backend
     env: node
     rootDir: backend
-    buildCommand: rm -rf node_modules && npm install
+    buildCommand: rm -rf node_modules && npm_config_build_from_source=true npm install
     startCommand: npm run start:prod
     healthCheckPath: /health
     disk:
