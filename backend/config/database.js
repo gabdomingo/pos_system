@@ -7,14 +7,48 @@ import { reconcileLegacyAccountEmails } from '../utils/accountSeeding.js';
 
 let db;
 
-export async function initDB() {
-  // resolve DB path relative to this config file so server can be started from any cwd
+function parseBooleanEnv(value, defaultValue = false) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return defaultValue;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'yes';
+}
+
+function resolveDatabasePath() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const dbPath = path.join(__dirname, '..', 'database.sqlite');
+  const configuredPath = String(process.env.DATABASE_PATH || '').trim();
+
+  if (!configuredPath) {
+    return path.join(__dirname, '..', 'database.sqlite');
+  }
+
+  return path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(path.join(__dirname, '..'), configuredPath);
+}
+
+export async function initDB() {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const dbPath = resolveDatabasePath();
+  const dbDir = path.dirname(dbPath);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const shouldBackupDb = parseBooleanEnv(process.env.ENABLE_DB_BACKUPS, !isProduction);
+
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  if (isProduction && !String(process.env.DATABASE_PATH || '').trim()) {
+    console.warn(
+      'DATABASE_PATH is not set in production. SQLite will use a local ephemeral file unless your host mounts persistent storage.'
+    );
+  }
 
   // create a timestamped backup of the DB file (if present) to avoid accidental data loss
   try {
-    if (fs.existsSync(dbPath)) {
+    if (shouldBackupDb && fs.existsSync(dbPath)) {
       const backupsDir = path.join(__dirname, '..', 'backups');
       if (!fs.existsSync(backupsDir)) fs.mkdirSync(backupsDir, { recursive: true });
       const now = new Date();
@@ -22,6 +56,8 @@ export async function initDB() {
       const backupPath = path.join(backupsDir, `database-${stamp}.sqlite`);
       fs.copyFileSync(dbPath, backupPath);
       console.log('Database backup created at', backupPath);
+    } else if (!shouldBackupDb) {
+      console.log('Database backup skipped because ENABLE_DB_BACKUPS is disabled.');
     }
   } catch (e) {
     console.error('Failed to create DB backup:', e);
@@ -155,13 +191,22 @@ export async function initDB() {
 
     await reconcileLegacyAccountEmails(db);
 
-    // ensure users table exists (created above) and seed default users if empty
+    // Seed default users only in development unless explicitly enabled.
     const ucount = await db.get(`SELECT COUNT(*) as c FROM users`);
     if (!ucount || ucount.c === 0) {
-      // minimal default users; passwords are upgraded to bcrypt on first successful login
-      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Admin', 'admin@charliepc.ph', 'admin123', 'admin');
-      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Cashier', 'cashier@charliepc.ph', 'cashier123', 'cashier');
-      await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Customer', 'customer@charliepc.ph', 'cust123', 'customer');
+      const shouldSeedDefaultUsers = parseBooleanEnv(
+        process.env.SEED_DEFAULT_USERS,
+        !isProduction
+      );
+
+      if (shouldSeedDefaultUsers) {
+        // Minimal default users for local development only; passwords are upgraded to bcrypt on first successful login.
+        await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Admin', 'admin@charliepc.ph', 'admin123', 'admin');
+        await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Cashier', 'cashier@charliepc.ph', 'cashier123', 'cashier');
+        await db.run(`INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)`, 'Customer', 'customer@charliepc.ph', 'cust123', 'customer');
+      } else {
+        console.warn('Users table is empty and SEED_DEFAULT_USERS is disabled. Create the first admin account manually before production use.');
+      }
     }
   } catch (err) {
     console.error('Error ensuring image column:', err);

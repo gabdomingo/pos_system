@@ -5,8 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start:prod": "NODE_ENV=production node server.js",
     "seed": "node scripts/seedTestData.js",
     "seed:accounts": "node scripts/seedAccounts.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
