@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { API } from '../config';
+import { PRODUCT_CATEGORIES } from '../constants/productCategories';
 import { formatCurrency, formatNumber } from '../utils/format';
 import {
   CHECKOUT_DEFAULTS,
@@ -213,9 +214,10 @@ export default function CustomerApp({ setMode, auth, onLogout, onNavigate }) {
       if (Number(product.stock || 0) > 0) current.inStock += 1;
       counts.set(category, current);
     }
-    return Array.from(counts.values())
-      .sort((a, b) => b.count - a.count || b.inStock - a.inStock)
-      .slice(0, 4);
+
+    return PRODUCT_CATEGORIES
+      .map((category) => counts.get(category) || { name: category, count: 0, inStock: 0 })
+      .filter((category) => category.count > 0);
   }, [products]);
   const categoryCount = useMemo(() => new Set(products.map((product) => product.category || 'Uncategorized')).size, [products]);
   const inStockProducts = useMemo(() => products.filter((product) => Number(product.stock || 0) > 0).length, [products]);
@@ -617,7 +619,12 @@ export default function CustomerApp({ setMode, auth, onLogout, onNavigate }) {
         <aside className="category-panel">
           <h4>Categories</h4>
           <div className="category-list">
-            {['Processor', 'Motherboard', 'Graphics Card', 'Memory', 'SSD', 'Power Supply', 'PC Case', 'Laptops'].map((category) => (
+            {categorySummary.map((category) => (
+              <button key={category.name} className="category-item" onClick={() => setQ(category.name)}>
+                {category.name}
+              </button>
+            ))}
+            {categorySummary.length === 0 && PRODUCT_CATEGORIES.map((category) => (
               <button key={category} className="category-item" onClick={() => setQ(category)}>{category}</button>
             ))}
           </div>

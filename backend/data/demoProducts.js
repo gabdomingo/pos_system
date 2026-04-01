@@ -13,6 +13,8 @@ export const PRODUCT_CATEGORIES = [
   'SSD'
 ];
 
+const EXPECTED_ITEMS_PER_CATEGORY = 5;
+
 const CATEGORY_IMAGE_POOLS = {
   Accessories: [
     picsum('charliepc-accessories-1'),
@@ -138,6 +140,30 @@ const CATEGORY_SEED_ITEMS = {
     { name: 'Kingston NV2 1TB', price: 3990, stock: 11, barcode: 'SSD-NV2-005' }
   ]
 };
+
+function buildSeedCounts() {
+  return PRODUCT_CATEGORIES.reduce((summary, category) => {
+    summary[category] = Array.isArray(CATEGORY_SEED_ITEMS[category]) ? CATEGORY_SEED_ITEMS[category].length : 0;
+    return summary;
+  }, {});
+}
+
+function validateSeedCatalog() {
+  const invalidCategory = PRODUCT_CATEGORIES.find(
+    (category) => (CATEGORY_SEED_ITEMS[category] || []).length !== EXPECTED_ITEMS_PER_CATEGORY
+  );
+
+  if (!invalidCategory) {
+    return;
+  }
+
+  const actualCount = (CATEGORY_SEED_ITEMS[invalidCategory] || []).length;
+  throw new Error(
+    `Seed catalog mismatch: "${invalidCategory}" has ${actualCount} items. Expected ${EXPECTED_ITEMS_PER_CATEGORY} products per category.`
+  );
+}
+
+validateSeedCatalog();
 
 export const demoProducts = PRODUCT_CATEGORIES.flatMap((category) => (
   CATEGORY_SEED_ITEMS[category].map((product) => ({
@@ -294,6 +320,8 @@ export async function seedDemoProducts(db) {
     updated,
     removedStale,
     total: demoProducts.length,
-    categories: PRODUCT_CATEGORIES.length
+    categories: PRODUCT_CATEGORIES.length,
+    itemsPerCategory: EXPECTED_ITEMS_PER_CATEGORY,
+    categoryCounts: buildSeedCounts()
   };
 }
