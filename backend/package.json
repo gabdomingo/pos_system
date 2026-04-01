@@ -7,6 +7,7 @@
     "start": "node server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "seed": "node scripts/seedTestData.js",
+    "seed:products": "node scripts/seedProductsOnly.js",
     "seed:accounts": "node scripts/seedAccounts.js"
   },
   "engines": {

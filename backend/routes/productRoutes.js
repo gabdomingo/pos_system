@@ -17,7 +17,7 @@ function debugLog(req, res, next) {
 }
 
 router.get("/", getAllProducts);
-router.get("/seed", seedProducts);
+router.get("/seed", requireAuth, requireAdmin, seedProducts);
 router.get("/search", searchProducts);
 router.get("/:id", getProduct);
 // Add product is restricted to authenticated admin/cashier users.

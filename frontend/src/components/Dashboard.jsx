@@ -38,11 +38,18 @@ export default function Dashboard({ auth, onLogout }) {
   async function seedData() {
     setSeeding(true);
     try {
-      await fetch(`${API}/products/seed`);
+      const headers = {};
+      const token = (auth && auth.token) || localStorage.getItem('token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`${API}/products/seed`, { headers });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to seed data');
+      }
       await fetchStats();
       setError("");
     } catch (e) {
-      setError("Failed to seed data");
+      setError(e.message || "Failed to seed data");
     }
     setSeeding(false);
   }
