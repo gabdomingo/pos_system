@@ -18,10 +18,32 @@ function getAllowedOrigins() {
     .filter(Boolean);
 }
 
+function escapeRegex(value) {
+  return value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
+}
+
+function matchesAllowedOrigin(origin, allowedOrigin) {
+  if (allowedOrigin === origin) {
+    return true;
+  }
+
+  if (!allowedOrigin.includes("*")) {
+    return false;
+  }
+
+  const pattern = `^${escapeRegex(allowedOrigin).replace(/\\\*/g, ".*")}$`;
+  return new RegExp(pattern, "i").test(origin);
+}
+
 const allowedOrigins = getAllowedOrigins();
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    const isAllowedOrigin =
+      !origin ||
+      allowedOrigins.length === 0 ||
+      allowedOrigins.some((allowedOrigin) => matchesAllowedOrigin(origin, allowedOrigin));
+
+    if (isAllowedOrigin) {
       return callback(null, true);
     }
 

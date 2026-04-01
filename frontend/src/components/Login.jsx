@@ -24,6 +24,19 @@ export default function Login({ onLogin, onNavigate }) {
 
   const requiresSecurityCode = role === 'admin' || role === 'cashier';
 
+  function buildNetworkErrorMessage() {
+    const target = API || window.location.origin;
+    const isLocalTarget =
+      !API ||
+      /localhost|127\.0\.0\.1/i.test(target);
+
+    if (isLocalTarget) {
+      return `Can't reach the server at ${target}. Make sure the backend is running on port 5001.`;
+    }
+
+    return `Can't reach the server at ${target}. If the backend health check is already passing, add this frontend origin to ALLOWED_ORIGINS on Render and redeploy the backend.`;
+  }
+
   function validateEmail(v) {
     // keep the client-side check light; backend handles the full validation rules
     const re = /^\S+@\S+$/;
@@ -65,7 +78,7 @@ export default function Login({ onLogin, onNavigate }) {
 
         throw new Error(
           isConnectionError
-            ? `Can't reach the server at ${API}. Make sure the backend is running on port 5001.`
+            ? buildNetworkErrorMessage()
             : rawMessage || 'Login request failed before reaching the server.'
         );
       }
