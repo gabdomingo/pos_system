@@ -29,6 +29,28 @@ function resolveDatabasePath() {
     : path.resolve(path.join(__dirname, '..'), configuredPath);
 }
 
+function ensureDatabaseDirectoryExists(dbDir, dbPath, isProduction) {
+  if (fs.existsSync(dbDir)) {
+    return;
+  }
+
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (error) {
+    if (error && error.code === 'EACCES') {
+      const message = isProduction
+        ? `Database directory is not writable: ${dbDir}. If you are deploying on Render, attach a persistent disk and set DATABASE_PATH to a file inside that mount path, or use a writable relative path like ./data/database.sqlite for an ephemeral demo deployment.`
+        : `Database directory is not writable: ${dbDir}. Update DATABASE_PATH to a writable location.`;
+
+      const wrappedError = new Error(message);
+      wrappedError.cause = error;
+      throw wrappedError;
+    }
+
+    throw error;
+  }
+}
+
 export async function initDB() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const dbPath = resolveDatabasePath();
@@ -36,9 +58,7 @@ export async function initDB() {
   const isProduction = process.env.NODE_ENV === 'production';
   const shouldBackupDb = parseBooleanEnv(process.env.ENABLE_DB_BACKUPS, !isProduction);
 
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
+  ensureDatabaseDirectoryExists(dbDir, dbPath, isProduction);
 
   if (isProduction && !String(process.env.DATABASE_PATH || '').trim()) {
     console.warn(
