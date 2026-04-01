@@ -12,6 +12,7 @@ export default function Dashboard({ auth, onLogout }) {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: '', category: '', price: 0, stock: 0, barcode: '', image: '' });
   const [adding, setAdding] = useState(false);
+  const isAdmin = auth?.user?.role === 'admin';
 
   useEffect(() => {
     fetchStats();
@@ -41,11 +42,22 @@ export default function Dashboard({ auth, onLogout }) {
       const headers = {};
       const token = (auth && auth.token) || localStorage.getItem('token');
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch(`${API}/products/seed`, { headers });
+      const res = await fetch(`${API}/products/seed`, { method: 'POST', headers });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Failed to seed data');
       }
+      try {
+        const payload = await res.json();
+        const counts = payload?.categoryCounts
+          ? Object.entries(payload.categoryCounts)
+              .map(([category, count]) => `${category}: ${count}`)
+              .join(', ')
+          : '';
+        if (counts) {
+          window.dispatchEvent(new CustomEvent('app:toast', { detail: { message: `Demo products synced. ${counts}` } }));
+        }
+      } catch (e) {}
       await fetchStats();
       setError("");
     } catch (e) {
@@ -86,6 +98,11 @@ export default function Dashboard({ auth, onLogout }) {
           <p>Welcome, {auth?.user?.name || auth?.user?.email || 'Admin'}. Monitor revenue, stock movement, and recent transactions from one control room.</p>
         </div>
         <div className="pos-header-actions">
+          {isAdmin && (
+            <button type="button" className="secondary" onClick={seedData} disabled={seeding}>
+              {seeding ? 'Syncing Demo Products...' : 'Sync Demo Products'}
+            </button>
+          )}
           {/* {auth && auth.user && auth.user.role === 'admin' && (
             <button type="button" className="secondary" onClick={() => setShowAdd(true)}>Add Product</button>
           )} */}
@@ -144,7 +161,7 @@ export default function Dashboard({ auth, onLogout }) {
       {stats.totalProducts === 0 && (
         <div className="dashboard-empty-banner">
           <p>No products found. Import demo data to get started.</p>
-          <button type="button" onClick={seedData} disabled={seeding}>
+          <button type="button" onClick={seedData} disabled={seeding || !isAdmin}>
             {seeding ? "Loading..." : "Import Demo Data"}
           </button>
         </div>
